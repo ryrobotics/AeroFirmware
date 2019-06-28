@@ -35,4 +35,4 @@ JLinkLog.txt
 *.sct
 *.uvguix.*
 build/*
-!build/infantry.sct
+!WP_Ctrl/namelesscorun_opticalflow.o
