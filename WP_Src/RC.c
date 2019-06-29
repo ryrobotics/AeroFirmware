@@ -173,7 +173,9 @@ void Remote_Control(void )
 				 &&Yaw_Control<=-Yaw_Max*Scale_Pecent_Max
 					 &&Roll_Control==0
 						 &&Pitch_Control==0
-							 &&Lock_Makesure_Cnt>200*2.0//持续2.0S
+							 //&&Lock_Makesure_Cnt>200*2.0//持续2.0S
+      						&&Lock_Makesure_Cnt>200*2.0//持续0.5S
+
 								 &&Gyro_Safety_Calibration_Flag==1
 									&&Check_Calibration_Flag()==0x00)
 			{
