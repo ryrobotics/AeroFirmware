@@ -108,7 +108,7 @@ void Controler_Mode_Select()
   if(Unwanted_Lock_Flag==1)//定高模式解锁后，无任何操作
   {
     Thr_Push_Over_State=Thr_Push_Over_Deadband();
-    if(Thr_Push_Over_State==2)//只要向上推过了中位死区，即把允许自动上锁操作
+    if(Thr_Push_Over_State==2)//只要向上推过了中位死区，即不允许自动上锁操作
     {
       Unwanted_Lock_Flag=0;
     }
