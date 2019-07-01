@@ -1,51 +1,21 @@
-#****************** (C) COPYRIGHT 2018 Player Tech *****************#
-'''
-本代码实现了：
-    1、点检测
-    2、线检测
-    3、二维码扫描
-    4、条形码扫描
-开机默认是点检测模式，可以通过串口设置成以上任何一种或者多种模式同时运行，
-但是同时运行的模式数量越多，计算输出的帧率就越低，所以尽量避免多模式同时运行。
-'''
-import sensor, image, time, math, struct
-from pyb import UART,LED,Timer
-
-#初始化镜头
-sensor.reset()
-sensor.set_pixformat(sensor.GRAYSCALE)
-sensor.set_framesize(sensor.QQVGA)
-sensor.skip_frames(30)
-sensor.set_auto_gain(True)
-sensor.set_auto_whitebal(True)
-sensor.set_contrast(3)#对比度
-
-clock = time.clock()#初始化时钟
-
+import sensor, image, time
+from pyb import LED
+from pyb import UART,Timer
 uart = UART(3,115200)#初始化串口 波特率 115200
+sensor.reset()
+sensor.set_pixformat(sensor.RGB565)
+sensor.set_framesize(sensor.QQQVGA) # 80x60 (4,800 pixels)
+sensor.skip_frames(time = 2000)     # WARNING: If you use QQVGA it may take seconds
+sensor.set_auto_gain(False) # 在进行颜色追踪时，必须关闭
+sensor.set_auto_whitebal(False) # 在进行颜色追踪时，必须关闭
+clock = time.clock()                # to process a frame sometimes.
 
-led1 = LED(1)
-led2 = LED(2)
-led3 = LED(3)
-led1.off()
-led2.off()
-led3.off()
-
-class ctrl(object):
-    work_mode = 0x02 #工作模式.默认是点检测，可以通过串口设置成其他模式
-    check_show = 0   #开显示，在线调试时可以打开，离线使用请关闭，可提高计算速度
-
-ctr=ctrl()
-
-rad_to_angle = 57.29#弧度转度
-
-thresholds = [0, 90]#自定义灰度阈值
-
-#定义采样区
-up_roi   = [0,   0, 160, 10]#上采样区0
-down_roi = [0, 110, 160, 10]#下采样区0
-left_roi = [0,   0,  10, 120]#左采样区0
-righ_roi = [150, 0,  10, 120]#右采样区0
+up_roi   = [0,   0, 80, 15]#上采样区0
+down_roi = [0, 55, 80, 15]#下采样区0
+left_roi = [0,   0, 25, 60]#左采样区0
+righ_roi = [55, 0,  25, 40]#右采样区0
+thresholds = [(30, 0, -128, 127, -128, 127)] #检测黑色物体的颜色阈值，根绝不同的环境，需要有适当的修改
+THRESHOLD = (0,100) # Grayscale threshold for dark things...
 
 class Dot(object):
     x = 0
@@ -55,88 +25,44 @@ class Dot(object):
     ok = 0
     flag = 0
 
-class Line(Dot):
-    x_angle = 0
-    y_angle = 0
+class singleline_check():
+    ok = 0
+    flag1 = 0
+    flag2 = 0
+    rho_err = 0
+    theta_err = 0
+
+class receive(object):
+    uart_buf = []
+    _data_len = 0
+    _data_cnt = 0
+    state = 0
+Receive=receive()
+
+class ctrl(object):
+    work_mode = 0x02 #工作模式.默认是点检测，可以通过串口设置成其他模式
+
+ctrl=ctrl()
 
 dot  = Dot()
-up   = Line()
-down = Line()
-left = Line()
-righ = Line()
-line = Line()
-
-
-#二维码和条形码扫描数据打包
-def pack_code_data(code):
-    #包头
-    pack_data=[0xAA,0xAA,0xF4,0x00]
-    #填充有效数据
-    j = 0
-    code_len = len(code)
-    while j < code_len:
-        temp = int(ord(code[j]))
-        pack_data.append(temp)
-        j = j+1
-    #包尾
-    pack_data.append(0x00)
-
-    lens = len(pack_data)#数据包大小
-    pack_data[3] = lens-5;#有效数据个数
-
-    i = 0
-    sum = 0
-
-    #和校验
-    while i<(lens-1):
-        sum = sum + pack_data[i]
-        i = i+1
-    pack_data[lens-1] = sum%256;
-
-    #打包成二进制数据
-    pack_data = bytearray(pack_data)
-
-    return pack_data
-
-#点检测数据打包
-def pack_dot_data():
-
-    dot_x = 80 - dot.x
-    dot_y = dot.y - 60
-
-    pack_data=bytearray([0xAA,0xAA,0xF2,0x00,
-        dot_x>>8,dot_x,
-        dot_y>>8,dot_y,
-        dot.flag,0x00])
-
-    lens = len(pack_data)#数据包大小
-    pack_data[3] = lens-5;#有效数据个数
-
-    i = 0
-    sum = 0
-
-    #和校验
-    while i<(lens-1):
-        sum = sum + pack_data[i]
-        i = i+1
-    pack_data[lens-1] = sum;
-
-    return pack_data
+up   = singleline_check()
+down = singleline_check()
+left = singleline_check()
+righ = singleline_check()
+line = singleline_check()
+singleline_check = singleline_check()
 
 #线检测数据打包
-def pack_line_data():
+def pack_linetrack_data():
 
-    line_x = 80 - int(line.x)
-    line_y = int(line.y) - 60
-    angle_x = int(line.x_angle*100)
-    angle_y = int(line.y_angle*100)
+    pack_data=bytearray([0xAA,0xAF,0xF3,0x00,
+        singleline_check.rho_err>>8,singleline_check.rho_err,
+        singleline_check.theta_err>>8,singleline_check.theta_err,
+        line.flag,0x00,0X00,0X00])
 
-    pack_data=bytearray([0xAA,0xAA,0xF3,0x00,
-        line_x>>8,line_x,
-        line_y>>8,line_y,
-        angle_x>>8,angle_x,
-        angle_y>>8,angle_y,
-        line.flag,0x00])
+    #清零线检测偏移数据和倾角数据，使得在没有检测到线时，输出为零
+    singleline_check.rho_err = 0
+    singleline_check.theta_err = 0
 
     lens = len(pack_data)#数据包大小
     pack_data[3] = lens-5;#有效数据个数
@@ -152,119 +78,33 @@ def pack_line_data():
 
     return pack_data
 
-#点检测函数
-def check_dot(img):
-    for blob in img.find_blobs([thresholds], pixels_threshold=5, area_threshold=5, merge=True, margin=5):
-        if dot.pixels<blob.pixels():#寻找最大的黑点
-            dot.pixels=blob.pixels()
-            dot.x = blob.cx()
-            dot.y = blob.cy()
-            dot.ok= 1
+#物块检测数据打包
+def pack_block_data():
 
-    #判断标志位
-    dot.flag = dot.ok
+    pack_data=bytearray([0xAA,0xAF,0xF2,0x00,
+        dot.x>>8,dot.x,
+        dot.y>>8,dot.y,dot.num>>8,dot.num,
+        dot.flag,0x00])
 
-    #清零标志位
-    dot.pixels = 0
-    dot.ok = 0
+    #清零点检测偏移数据和倾角数据，使得在没有检测到点时，输出为零
+    dot.x = 0
+    dot.y = 0
 
-    #发送数据
-    uart.write(pack_dot_data())
+    lens = len(pack_data)#数据包大小
+    pack_data[3] = lens-5;#有效数据个数
 
-#在图像边沿扫描黑块
-def fine_border_blob(img,area,area_roi):
+    i = 0
+    sum = 0
 
-    for blob in img.find_blobs([thresholds], roi=area_roi, pixels_threshold=5, area_threshold=5, merge=True, margin=1):
-        area.num = area.num + 1
-        if area.pixels<blob.pixels():#寻找最大的黑块
-            area.pixels=blob.pixels()
-            area.x = blob.cx()
-            area.y = blob.cy()
-    if area.num==1 or area.num==2:#判断黑块数量
-        area.ok= 1
+    #和校验
+    while i<(lens-1):
+        sum = sum + pack_data[i]
+        i = i+1
+    pack_data[lens-1] = sum;
 
-#线检测函数
-def check_line(img):
+    return pack_data
 
-    #边沿扫描
-    fine_border_blob(img,  up,  up_roi)
-    fine_border_blob(img,down,down_roi)
-    fine_border_blob(img,left,left_roi)
-    fine_border_blob(img,righ,righ_roi)
-
-    #计算线的位置
-    if up.ok and down.ok:
-        line.x = (up.x + down.x)/2
-    elif up.ok:
-        line.x = up.x
-    elif down.ok:
-        line.x = down.x
-    line.x = int(line.x)
-
-    if left.ok and righ.ok:
-        line.y = (left.y + righ.y)/2
-    elif left.ok:
-        line.y = left.y
-    elif righ.ok:
-        line.y = righ.y
-    line.y = int(line.y)
-
-    #计算线的倾角
-    if up.ok and down.ok:
-        line.x_angle = math.atan((up.x-down.x)/(up.y-down.y)) * rad_to_angle
-    if left.ok and righ.ok:
-        line.y_angle = math.atan((left.y-righ.y)/(righ.x-left.x)) * rad_to_angle
-
-    #判断Y轴最佳采样区
-    if left.ok or righ.ok:
-        if line.y<25:
-            up_roi[1] = 50
-            down_roi[1] = 110
-        elif line.y>95:
-            up_roi[1] = 0
-            down_roi[1] = 70
-        else:
-            up_roi[1] = 0
-            down_roi[1] = 110
-    else:
-        up_roi[1] = 0
-        down_roi[1] = 110
-
-    #判断X轴最佳采样区
-    if up.ok or down.ok:
-        if line.x<25:
-            left_roi[0] = 50
-            righ_roi[0] = 150
-        elif line.x>135:
-            left_roi[0] = 0
-            righ_roi[0] = 110
-        else:
-            left_roi[0] = 0
-            righ_roi[0] = 150
-    else:
-        left_roi[0] = 0
-        righ_roi[0] = 150
-
-    #判断标志位
-    line.flag = 0
-    if up.ok:
-        line.flag = line.flag | 0x01
-    if down.ok:
-        line.flag = line.flag | 0x02
-    if left.ok:
-        line.flag = line.flag | 0x04
-    if righ.ok:
-        line.flag = line.flag | 0x08
-
-    #清除标志位
-    up.ok = down.ok = left.ok = righ.ok = 0
-    up.num = down.num = left.num = righ.num = 0
-    up.pixels = down.pixels = left.pixels = righ.pixels = 0
-
-    #发送数据
-    uart.write(pack_line_data())
-
-#串口数据解析
+#串口数据解析 如果是线检测请发送数据：AA AF F1 01 02 4D 如果是点检测请发送数据：AA AF F1 01 01 4C
 def Receive_Anl(data_buf,num):
 
     #和校验
@@ -285,152 +125,170 @@ def Receive_Anl(data_buf,num):
     if data_buf[2]==0x02:
         print("receive 2 ok!")
 
-    if data_buf[2]==0xF1:
+    if data_buf[2]==0xFC:
 
         #设置模块工作模式
-        ctr.work_mode = data_buf[4]
+        ctrl.work_mode = data_buf[4]
+        #print("Set work mode success!")
 
-        print("Set work mode success!")
-
-class receive(object):
-    uart_buf = []
-    _data_len = 0
-    _data_cnt = 0
-    state = 0
-R=receive()
 
 #串口通信协议接收
 def Receive_Prepare(data):
 
-    if R.state==0:
+    if Receive.state==0:
 
         if data == 0xAA:#帧头
-            R.state = 1
-            R.uart_buf.append(data)
+            Receive.state = 1
+            Receive.uart_buf.append(data) #将数据保存到数组里面
         else:
-            R.state = 0
+            Receive.state = 0
 
-    elif R.state==1:
+    elif Receive.state==1:
         if data == 0xAF:#帧头
-            R.state = 2
-            R.uart_buf.append(data)
+            Receive.state = 2
+            Receive.uart_buf.append(data) #将数据保存到数组里面
         else:
-            R.state = 0
+            Receive.state = 0
 
-    elif R.state==2:
+    elif Receive.state==2:
         if data <= 0xFF:#数据个数
-            R.state = 3
-            R.uart_buf.append(data)
+            Receive.state = 3
+            Receive.uart_buf.append(data) #将数据保存到数组里面
         else:
-            R.state = 0
+            Receive.state = 0
 
-    elif R.state==3:
+    elif Receive.state==3:
         if data <= 33:
-            R.state = 4
-            R.uart_buf.append(data)
-            R._data_len = data
-            R._data_cnt = 0
+            Receive.state = 4
+            Receive.uart_buf.append(data) #将数据保存到数组里面
+            Receive._data_len = data
+            Receive._data_cnt = 0
         else:
-            R.state = 0
+            Receive.state = 0
 
-    elif R.state==4:
-        if R._data_len > 0:
-            R. _data_len = R._data_len - 1
-            R.uart_buf.append(data)
-            if R._data_len == 0:
-                R.state = 5
+    elif Receive.state==4:
+        if Receive._data_len > 0:
+            Receive. _data_len = Receive._data_len - 1
+            Receive.uart_buf.append(data) #将数据保存到数组里面
+            if Receive._data_len == 0:
+                Receive.state = 5
         else:
-            R.state = 0
+            Receive.state = 0
 
-    elif R.state==5:
-        R.state = 0
-        R.uart_buf.append(data)
-        Receive_Anl(R.uart_buf,R.uart_buf[3]+5)
-        R.uart_buf=[]#清空缓冲区，准备下次接收数据
+    elif Receive.state==5:
+        Receive.state = 0
+        Receive.uart_buf.append(data) #将数据保存到数组里面
+        Receive_Anl(Receive.uart_buf,Receive.uart_buf[3]+5) #还原数据个数，数据的总个数为6
+        Receive.uart_buf=[]#清空缓冲区，准备下次接收数据
     else:
-        R.state = 0
+        Receive.state = 0
 
 #读取串口缓存
 def uart_read_buf():
     i = 0
-    buf_size = uart.any()
+    buf_size = uart.any() #判断是否有串口数据
     while i<buf_size:
-        Receive_Prepare(uart.readchar())
+        Receive_Prepare(uart.readchar()) #读取串口数据
         i = i + 1
 
-fps = 0
+#点检测函数
+def check_dot(img):
+    #thresholds为黑色物体颜色的阈值，是一个元组，需要用括号［ ］括起来可以根据不同的颜色阈值更改；pixels_threshold 像素个数阈值，
+    #如果色块像素数量小于这个值，会被过滤掉area_threshold 面积阈值，如果色块被框起来的面积小于这个值，会被过滤掉；merge 合并，如果
+    #设置为True，那么合并所有重叠的blob为一个；margin 边界，如果设置为5，那么两个blobs如果间距5一个像素点，也会被合并。
+    for blob in img.find_blobs(thresholds, pixels_threshold=150, area_threshold=150, merge=True, margin=5):
+        if dot.pixels<blob.pixels():#寻找最大的黑点
+            ##先对图像进行分割，二值化，将在阈值内的区域变为白色，阈值外区域变为黑色
+            img.binary(thresholds)
+            #对图像边缘进行侵蚀，侵蚀函数erode(size, threshold=Auto)，size为kernal的大小，去除边缘相邻处多余的点。threshold用
+            #来设置去除相邻点的个数，threshold数值越大，被侵蚀掉的边缘点越多，边缘旁边白色杂点少；数值越小，被侵蚀掉的边缘点越少，边缘
+            #旁边的白色杂点越多。
+            img.erode(2)
+            dot.pixels=blob.pixels() #将像素值赋值给dot.pixels
+            dot.x = blob.cx() #将识别到的物体的中心点x坐标赋值给dot.x
+            dot.y = blob.cy() #将识别到的物体的中心点x坐标赋值给dot.x
+            dot.ok= 1
+            #在图像中画一个十字；x,y是坐标；size是两侧的尺寸；color可根据自己的喜好设置
+            img.draw_cross(dot.x, dot.y, color=127, size = 10)
+            #在图像中画一个圆；x,y是坐标；5是圆的半径；color可根据自己的喜好设置
+            img.draw_circle(dot.x, dot.y, 5, color = 127)
 
-#定时器中断
-def time_irq(timer):
-    print(fps)
+    #判断标志位 赋值像素点数据
+    dot.flag = dot.ok
+    dot.num = dot.pixels
 
-#定时器频率1HZ中断
-tim = Timer(4, freq=1) # 初始化定时器
-tim.callback(time_irq) # 定时器中断回调函数
+    #清零标志位
+    dot.pixels = 0
+    dot.ok = 0
 
-#计算最优灰度阈值
-def img_duty(img):
+    #发送数据
+    uart.write(pack_block_data())
 
-    stat=img.get_statistics()
+def fine_border(img,area,area_roi):
+    #roi是“感兴趣区”通过设置不同的感兴趣区，可以判断线段是一条还是两条，是T型线，还是十字、还是7字线
+    singleline_check.flag1 = img.get_regression([(255,255)],roi=area_roi, robust = True)
+    if (singleline_check.flag1):
+        area.ok=1
 
-    thresholds[1] = (int)(stat.mean()/2)
+#找线
+def found_line(img):
+    #对图像所有阈值像素进行线性回归计算。这一计算通过最小二乘法进行，通常速度较快，但不能处理任何异常值。 若 robust 为True，则将
+    #使用泰尔指数。泰尔指数计算图像中所有阈值像素间的所有斜率的中值。thresholds：追踪的颜色范围
+    singleline_check.flag2 = img.get_regression([(255,255)], robust = True)
+    if (singleline_check.flag2):
+        #print(clock.fps())
+        singleline_check.rho_err = abs(singleline_check.flag2.rho())-0 #求解线段偏移量的绝对值
+        if singleline_check.flag2.theta()>90: #求解角度的偏移量
+            singleline_check.theta_err = singleline_check.flag2.theta()-0
+        else:
+            singleline_check.theta_err = singleline_check.flag2.theta()-0
+        #在图像中画一条直线。singleline_check.flag2.line()意思是(x0, y0)到(x1, y1)的直线；颜色可以是灰度值(0-255)，或者是彩色值
+        #(r, g, b)的tupple，默认是白色
+        img.draw_line(singleline_check.flag2.line(), color = 127)
+        #print(singleline_check.theta_err)
 
-#主循环
+def check_line(img):
+    fine_border(img,up,up_roi) #上边界区域检测
+    fine_border(img,down,down_roi) #下边界区域检测
+    fine_border(img,left,left_roi) #左边界区域检测
+    fine_border(img,righ,righ_roi) #右边界区域检测
+
+    line.flag = 0
+    if up.ok:
+        line.flag = line.flag | 0x01 #将line.flag最低位置1
+    if down.ok:
+        line.flag = line.flag | 0x02 #将line.flag第2位置1
+    if left.ok:
+        line.flag = line.flag | 0x04 #将line.flag第3位置1
+    if righ.ok:
+        line.flag = line.flag | 0x08 #将line.flag第4位置1
+    #print(line.flag)     #做测试用，在正常检测时最好屏蔽掉
+
+    found_line(img) #线检测
+    #清零标志位
+    up.ok = down.ok = left.ok = righ.ok = 0
+    up.num = down.num = left.num = righ.num = 0
+    up.pixels = down.pixels = left.pixels = righ.pixels = 0
+
+    #发送数据
+    uart.write(pack_linetrack_data())
+
 while(True):
-
     clock.tick()
-    img = sensor.snapshot()
-
-    #计算最优灰度阈值（如果希望使用自定义阈值，请把该函数注释掉）
-    img_duty(img)
-
-    #图像二值化（仅在线调试时使用，实际上机运行时请把该函数注释掉，可以提高计算速度）
-    #img.binary([thresholds],invert=True)
-
-    #点检测
-    if (ctr.work_mode&0x01)!=0:
+    if (ctrl.work_mode&0x01)!=0:
+        sensor.set_pixformat(sensor.RGB565)
+        img = sensor.snapshot()
         check_dot(img)
+        LED(1).toggle()      #亮灯
 
     #线检测
-    if (ctr.work_mode&0x02)!=0:
+    if (ctrl.work_mode&0x02)!=0:
+        sensor.set_pixformat(sensor.GRAYSCALE)
+        img = sensor.snapshot().binary([THRESHOLD])
         check_line(img)
-
-    #扫描二维码
-    if (ctr.work_mode&0x04)!=0:
-        led3.off()
-        for code in img.find_qrcodes():
-            send_code = pack_code_data(code.payload())
-            uart.write( send_code )#发送数据
-            led3.on()#扫描成功后灯光提示
-
-    #扫描条形码
-    if (ctr.work_mode&0x08)!=0:
-        led2.off()
-        for code in img.find_barcodes():
-            send_code = pack_code_data(code.payload())
-            uart.write( send_code )#发送数据
-            led2.on()#扫描成功后灯光提示
-
-    #可视化显示
-    if ctr.check_show:
-        if (ctr.work_mode&0x01)!=0:
-            img.draw_cross(dot.x, dot.y, color=127, size = 10)
-            img.draw_circle(dot.x, dot.y, 5, color = 127)
-        if (ctr.work_mode&0x02)!=0:
-            img.draw_cross(up.x, up.y, color=127)
-            img.draw_cross(down.x, down.y, color=127)
-            img.draw_cross(left.x, left.y, color=127)
-            img.draw_cross(righ.x, righ.y, color=127)
-            img.draw_cross(line.x, line.y, color=127, size = 10)
-            img.draw_circle(line.x, line.y, 5, color = 127)
-
+        LED(3).toggle()  #亮灯
     #接收串口数据
     uart_read_buf()
+    #print(clock.fps())#打印帧率
 
-    #计算程序运行频率
-    fps=int(clock.fps())
 
-    #LED灯闪烁
-    led1.toggle()
-
-#****************** (C) COPYRIGHT 2018 Player Tech *****************#
