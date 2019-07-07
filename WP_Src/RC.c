@@ -193,7 +193,7 @@ void Remote_Control(void )
 				Reset_Mag_Calibartion(1);
 				Reset_Accel_Calibartion(1);
 				Reset_RC_Calibartion(1);
-				Auto_ReLock_Cnt=200*6;//持续6S
+				Auto_ReLock_Cnt=200*8;//持续6S
 				Auto_Relock_Flag_Set=0;
         Last_Lock_State=UnLock;
 			}

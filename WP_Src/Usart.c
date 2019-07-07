@@ -1016,7 +1016,7 @@ void Vcan_Send(void)//山外地面站发送
 	DataBuf[4]=observation_acc;
   DataBuf[5]=NamelessQuad.Vel_History[_YAW][30];
   DataBuf[6]=WP_Sensor.baro_altitude_div;
-	DataBuf[7]=NamelessQuad.Acceleration[_YAW];*/
+	DataBuf[7]=NamelessQuad.Acceleration[_YAW];
 	
 
 	DataBuf[0]=Accel_X_Butter_Filter.output[Accel_X_Butter_Filter.N-1];;
@@ -1026,7 +1026,15 @@ void Vcan_Send(void)//山外地面站发送
 	DataBuf[4]=accel.y;
   DataBuf[5]=accel.z;
 	
-	/*
+	//PID期望反馈
+  DataBuf[0]=Total_Controller.Pitch_Angle_Control.Expect;
+  DataBuf[1]=Total_Controller.Pitch_Gyro_Control.Expect;
+  DataBuf[2]=Total_Controller.Pitch_Angle_Control.FeedBack;
+  DataBuf[3]=Total_Controller.Pitch_Gyro_Control.FeedBack;
+  DataBuf[4]=Total_Controller.Roll_Angle_Control.Expect;
+  DataBuf[5]=Total_Controller.Roll_Gyro_Control.Expect;
+  DataBuf[6]=Total_Controller.Roll_Angle_Control.FeedBack;
+  DataBuf[7]=Total_Controller.Roll_Gyro_Control.FeedBack;
   
   DataBuf[0]=GPS_Vel_Div.E;//惯导高度
   DataBuf[1]=GPS_Vel_Div.N;//惯导速度
@@ -1046,8 +1054,9 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[4]=gyro_filter_data.y;
   DataBuf[5]=opt_gyro_data.y;
   DataBuf[6]=opt_origin_data.pixel_flow_y_integral;
-  DataBuf[7]=opt_filter_data.y;   
+  DataBuf[7]=opt_filter_data.y;*/
   
+
   DataBuf[0]=gyro_filter_data.x;//Pitch X
   DataBuf[1]=gyro_filter_data.y;//Roll R
   DataBuf[2]=opt_gyro_data.x;
@@ -1057,7 +1066,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[6]=opt_gyro_filter_data.x;
   DataBuf[7]=opt_gyro_filter_data.y;
   
-  
+  /*
   DataBuf[0]=PPM_Databuf[0];
   DataBuf[1]=PPM_Databuf[1];
   DataBuf[2]=PPM_Databuf[2];
