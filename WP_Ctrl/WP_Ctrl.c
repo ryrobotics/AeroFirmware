@@ -58,6 +58,11 @@ void Controler_Mode_Select()
     OpticalFlow_Ctrl_Reset();
   }
   
+  if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))
+  {
+    OpticalFlow_SINS_Reset();
+    OpticalFlow_Ctrl_Reset();
+  }
   
   if(Reserve_Mode_Cnt>=1) Reserve_Mode_Cnt--;
   if(Reserve_Mode_Cnt==0) Reserve_Mode_Fast_Exchange_Cnt=0; 

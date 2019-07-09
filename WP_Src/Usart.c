@@ -1054,7 +1054,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[4]=gyro_filter_data.y;
   DataBuf[5]=opt_gyro_data.y;
   DataBuf[6]=opt_origin_data.pixel_flow_y_integral;
-  DataBuf[7]=opt_filter_data.y;*/
+  DataBuf[7]=opt_filter_data.y;
   
 
   DataBuf[0]=gyro_filter_data.x;//Pitch X
@@ -1064,8 +1064,17 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[4]=opt_filter_data.x;
   DataBuf[5]=opt_filter_data.y;
   DataBuf[6]=opt_gyro_filter_data.x;
-  DataBuf[7]=opt_gyro_filter_data.y;
+  DataBuf[7]=opt_gyro_filter_data.y;*/
   
+  DataBuf[0]=OpticalFlow_SINS.Position[_PITCH];
+  DataBuf[1]=OpticalFlow_SINS.Speed[_PITCH];
+  DataBuf[2]=OpticalFlow_SINS.Position[_ROLL];
+  DataBuf[3]=OpticalFlow_SINS.Speed[_ROLL];
+  DataBuf[4]=OpticalFlow_Position.x;
+  DataBuf[5]=OpticalFlow_Position.y;
+  DataBuf[6]=NamelessQuad.Position[_YAW];//惯导高度
+  DataBuf[7]=0;
+
   /*
   DataBuf[0]=PPM_Databuf[0];
   DataBuf[1]=PPM_Databuf[1];
