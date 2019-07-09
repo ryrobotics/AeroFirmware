@@ -134,8 +134,8 @@
 //#define GYRO_CONTROL_MODE  ADRC_MODE
 
 
-//#define SDK_Take_Over_Ctrl  1//SDK控制接管来源于OPENMV、无线数传
-#define SDK_Take_Over_Ctrl  2//SDK控制接管来源于人为事先指定
+#define SDK_Take_Over_Ctrl  1//SDK控制接管来源于OPENMV、无线数传
+//#define SDK_Take_Over_Ctrl  2//SDK控制接管来源于人为事先指定
 
 
 void Total_Control(void);

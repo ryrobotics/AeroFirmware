@@ -142,14 +142,14 @@ void OpticalFlow_Control(uint8_t force_brake_flag)
           Total_Controller.Roll_Angle_Control.Expect=constrain_float(fast_atan(accel_target.x/(GRAVITY_MSS*100))*RAD2DEG,-30,30);//roll                                
           SDK_Ctrl_Cnt=0;
         }
-        //if(ABS(SDK_Target_Yaw_Gyro)<=10) OpticalFlow_Y_Vel_Control(8);
-        //else if(ABS(SDK_Target_Yaw_Gyro)<=20) OpticalFlow_Y_Vel_Control(5);
-        //else if(ABS(SDK_Target_Yaw_Gyro)<=50) OpticalFlow_Y_Vel_Control(3);
-        //else OpticalFlow_Y_Vel_Control(2);
-        if(ABS(SDK_Target_Yaw_Gyro)<=10) OpticalFlow_Y_Vel_Control(5);
-        else if(ABS(SDK_Target_Yaw_Gyro)<=20) OpticalFlow_Y_Vel_Control(3);
-        else if(ABS(SDK_Target_Yaw_Gyro)<=50) OpticalFlow_Y_Vel_Control(2);
-        else OpticalFlow_Y_Vel_Control(1);
+        if(ABS(SDK_Target_Yaw_Gyro)<=10) OpticalFlow_Y_Vel_Control(8);
+        else if(ABS(SDK_Target_Yaw_Gyro)<=20) OpticalFlow_Y_Vel_Control(5);
+        else if(ABS(SDK_Target_Yaw_Gyro)<=50) OpticalFlow_Y_Vel_Control(3);
+        else OpticalFlow_Y_Vel_Control(2);
+//        if(ABS(SDK_Target_Yaw_Gyro)<=10) OpticalFlow_Y_Vel_Control(5);
+//        else if(ABS(SDK_Target_Yaw_Gyro)<=20) OpticalFlow_Y_Vel_Control(3);
+//        else if(ABS(SDK_Target_Yaw_Gyro)<=50) OpticalFlow_Y_Vel_Control(2);
+//        else OpticalFlow_Y_Vel_Control(1);
         //OpticalFlow_Y_Vel_Control(0);
         OpticalFlow_Pos_Ctrl_Expect.x=0;
         OpticalFlow_Pos_Ctrl_Expect.y=0;
