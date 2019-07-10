@@ -395,12 +395,13 @@ void Main_Leading_Control(void)
 #else   //光流辅助悬停
       if(Reserve_Mode==2&&Sensor_Flag.Hcsr04_Health==1&&OpticalFlow_Is_Work==1)//超声波有效且存在光流外设时，才允许进入光流模式  
       {  
-        if(SDK_Take_Over_Ctrl==1)       
-        {
-          OpticalFlow_Control(0);//普通光流模式、无线数传与OPENMV参与的SDK模式
-          ncq_control_althold();//高度控制
-        }
-        else if(SDK_Take_Over_Ctrl==2)  
+//        if(SDK_Take_Over_Ctrl==1)       
+//        {
+//          OpticalFlow_Control(0);//普通光流模式、无线数传与OPENMV参与的SDK模式
+//          ncq_control_althold();//高度控制
+//        }
+//        else if(SDK_Take_Over_Ctrl==2)  
+        if(SDK_Take_Over_Ctrl==2)  
         {
             if(SDK_Ctrl_Mode==1)    NCQ_SDK_Run();//用户事先指定的SDK开发者模式 
             else  
