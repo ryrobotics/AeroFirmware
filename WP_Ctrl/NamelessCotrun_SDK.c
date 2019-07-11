@@ -463,7 +463,7 @@ void SDK_DT_Send_Check(unsigned char mode)
 uint8_t SDK_Now_Mode=0x00;
 uint8_t SDK_Mode_Set=0x02;
 #define SDK_TARGET_X_OFFSET  0
-#define SDK_TARGET_Y_OFFSET  30//-12
+#define SDK_TARGET_Y_OFFSET  3//-12
 Line  SDK_Line;
 Point SDK_Point;
 uint8_t SDK_Recieve_Flag=0;
