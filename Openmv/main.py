@@ -9,9 +9,11 @@ sensor.skip_frames(time = 2000)     # WARNING: If you use QQVGA it may take seco
 sensor.set_auto_gain(False) # 在进行颜色追踪时，必须关闭
 sensor.set_auto_whitebal(False) # 在进行颜色追踪时，必须关闭
 clock = time.clock()                # to process a frame sometimes.
-# sensor.set_vflip(1)       #竖直反转
-# sensor.set_hmirror(1)     #水平反转
-
+sensor.set_vflip(1)       #竖直反转
+sensor.set_hmirror(1)     #水平反转
+LED(1).off()
+LED(2).off()
+LED(3).off()
 
 up_roi   = [0,   0, 80, 15]#上采样区0
 down_roi = [0, 55, 80, 15]#下采样区0
@@ -51,7 +53,7 @@ class receive(object):
 Receive=receive()
 
 class ctrl(object):
-    work_mode = 0x03 #工作模式.默认是点检测，可以通过串口设置成其他模式
+    work_mode = 0x0F #工作模式.默认是点检测，可以通过串口设置成其他模式
 
 ctrl=ctrl()
 
@@ -342,6 +344,8 @@ while(True):
         img = sensor.snapshot()
         check_rectangle(img)
         LED(3).toggle()      #亮灯
+        LED(1).off()
+        LED(2).off()
 
     #线检测
     if (ctrl.work_mode==0x02):
@@ -349,6 +353,8 @@ while(True):
         img = sensor.snapshot().binary([THRESHOLD])
         check_line(img)
         LED(2).toggle()  #亮灯
+        LED(1).off()
+        LED(3).off()
 
     #点检测
     if (ctrl.work_mode==0x01):
@@ -356,6 +362,8 @@ while(True):
         img = sensor.snapshot()
         check_dot(img)
         LED(1).toggle()      #亮灯
+        LED(2).off()
+        LED(3).off()
 
     #空闲检测
     if (ctrl.work_mode==0x0F):
