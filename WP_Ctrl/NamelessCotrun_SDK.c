@@ -245,9 +245,9 @@ uint8_t move_with_z_target(float z_target,float z_vel,float delta,SDK_Status *St
   return 0;
 }
 
-uint8_t move_with_openmv(float delta,SDK_Status *Status,uint16_t number)
+uint8_t move_with_openmv(uint8_t SDK_Mode_Set,float delta,SDK_Status *Status,uint16_t number)
 {
-static float end_time=0;
+  static float end_time=0;
   Testime dt;
 
   Test_Period(&dt);
@@ -261,10 +261,24 @@ static float end_time=0;
   }
   else
   {
-    if(Status->Status[number].Start_Flag==0) 
+    if(Status->Status[number].Start_Flag==0)//openmv任务切换，防冲突，只执行一次
     {
+      if(SDK_Mode_Set!=0x03)//下视openmv任务切换
+      {
+        SDK_DT_Send_Check(SDK_Mode_Set);//改变下视openmv任务
+        SDK_DT_Send_Check_Front(WAIT_MODE);//前视openmv进入空模式，防止冲突
+      }
+      else
+      {
+        SDK_DT_Send_Check_Front(REC_MODE);//前视openmv进入矩形检测任务
+        SDK_DT_Send_Check(WAIT_MODE);//下视openmv进入空模式，防止冲突
+      }
       end_time=dt.Now_Time+delta;//单位ms 
       Status->Status[number].Start_Flag=1;
+      
+      Unwanted_Lock_Flag=0;//允许自动上锁
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
     } 
     if(dt.Now_Time>end_time)
     {
@@ -339,7 +353,7 @@ static float end_time=0;
 //#define NCQ_SDK_DUTY1 move_with_z_target(120,0,0,&SDK_Duty_Status,1-1)
 //#define NCQ_SDK_DUTY2 move_with_xy_target(0,100,&SDK_Duty_Status,2-1)
 #define NCQ_SDK_DUTY1 move_with_z_target(120,0,0,&SDK_Duty_Status,1-1)
-#define NCQ_SDK_DUTY2 move_with_openmv(10000,&SDK_Duty_Status,2-1)
+#define NCQ_SDK_DUTY2 move_with_openmv(0x03,10000,&SDK_Duty_Status,2-1)
 #define NCQ_SDK_DUTY3 move_with_z_target(-150,0,0,&SDK_Duty_Status,3-1)
 
 
@@ -438,7 +452,7 @@ uint8_t NCQ_SDK_Circle(void)
   return 0;
 }
 
-
+// 原openmv数据默认为安装位在下的openmv
 unsigned char sdk_data_to_send[50];
 void SDK_DT_Send_Data(unsigned char *dataToSend , unsigned char length)
 {
@@ -452,25 +466,52 @@ void SDK_DT_Send_Check(unsigned char mode)
   sdk_data_to_send[2]=0xFC;
   sdk_data_to_send[3]=2;
   sdk_data_to_send[4]=mode;
-  sdk_data_to_send[5]=0
-    ;
+  sdk_data_to_send[5]=0;
   u8 sum = 0;
   for(u8 i=0;i<6;i++) sum += sdk_data_to_send[i];
   sdk_data_to_send[6]=sum;
   SDK_DT_Send_Data(sdk_data_to_send, 7);
 }
 
+// 前视openmv数据传送
+// by RayWong
+unsigned char sdk_data_to_send_front[50];
+void SDK_DT_Send_Data_Front(unsigned char *dataToSend , unsigned char length)
+{
+  USART2_Send(sdk_data_to_send_front, length);
+}
+
+void SDK_DT_Send_Check_Front(unsigned char mode)
+{
+  sdk_data_to_send_front[0]=0xAA;
+  sdk_data_to_send_front[1]=0xAF;
+  sdk_data_to_send_front[2]=0xFC;
+  sdk_data_to_send_front[3]=2;
+  sdk_data_to_send_front[4]=mode;
+  sdk_data_to_send_front[5]=0;
+  u8 sum = 0;
+  for(u8 i=0;i<6;i++) sum += sdk_data_to_send_front[i];
+  sdk_data_to_send_front[6]=sum;
+  SDK_DT_Send_Data_Front(sdk_data_to_send_front, 7);
+}
+
+
 uint8_t SDK_Now_Mode=0x00;
-uint8_t SDK_Mode_Set=0x02;
+uint8_t SDK_Mode_Set=LINE_MODE;
 #define SDK_TARGET_X_OFFSET  0
 #define SDK_TARGET_Y_OFFSET  3//-12
 Line  SDK_Line;
 Point SDK_Point;
+Point  SDK_Rec;// by RayWong
 uint8_t SDK_Recieve_Flag=0;
 Vector2f SDK_Target,SDK_Target_Offset;
 float SDK_Target_Yaw_Gyro=0;
 #define  Pixel_Size    0.0048
-#define  Focal_Length  0.42
+#define  Focal_Length  0.34
+
+#define  Focal_Length_Front  0.28
+int16_t PointX=0;
+float RealLength=0;
 
 void SDK_Line_DT_Reset()
 {
@@ -494,6 +535,15 @@ void SDK_Point_DT_Reset()
   SDK_Point.Pixel=0;
   SDK_Point.flag=0;
 }
+
+void SDK_Rec_DT_Reset()
+{
+  SDK_Point.x=0;
+  SDK_Point.y=0;
+  SDK_Point.Pixel=0;
+  SDK_Point.flag=0;
+}
+
 void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
 {
   //u8 sum = 0;
@@ -506,7 +556,7 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
   }
   else if(*(data_buf+2)==0XF3)//线检测
   {
-    SDK_Now_Mode=0x02;
+    SDK_Now_Mode=LINE_MODE;
     SDK_Line.x=*(data_buf+4)<<8|*(data_buf+5);
     SDK_Line.line_angle=(*(data_buf+6)<<8)|*(data_buf+7);
     SDK_Line.flag=*(data_buf+8);        
@@ -533,7 +583,7 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
   }
   else if(*(data_buf+2)==0XF2)//点检测
   {
-    SDK_Now_Mode=0x01;
+    SDK_Now_Mode=POINT_MODE;
     SDK_Point.x=*(data_buf+4)<<8|*(data_buf+5);
     SDK_Point.y=*(data_buf+6)<<8|*(data_buf+7);
     SDK_Point.Pixel=*(data_buf+8)<<8|*(data_buf+9);
@@ -559,6 +609,47 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
       +NamelessQuad.Position[_YAW]*tan(Pitch* DEG2RAD)-SDK_Target_Offset.y;  
     SDK_Line_DT_Reset(); 
   }
+  
+  else if(*(data_buf+2)==0XF1)//矩形检测
+  {
+    SDK_Now_Mode=REC_MODE;
+    SDK_Point.x=*(data_buf+4)<<8|*(data_buf+5);
+    SDK_Point.y=*(data_buf+6)<<8|*(data_buf+7);
+    SDK_Point.Pixel=*(data_buf+8)<<8|*(data_buf+9);//实际为矩形边长
+    SDK_Point.flag=*(data_buf+10)+1;
+    
+    RealLength=100/(SDK_Point.Pixel*Pixel_Size)*Focal_Length_Front;//真实距离 cm
+    
+		if(SDK_Point.x<=45&&SDK_Point.x>=35)
+			PointX=40;
+		else if(SDK_Point.x>=60)
+			PointX=45;
+		else if(SDK_Point.x<=20)
+			PointX=35;
+		else
+			PointX=SDK_Point.x;
+    
+    if(SDK_Point.flag!=0)  
+    {
+      if(SDK_Point.trust_Cnt<=20)	 SDK_Point.trust_Cnt++;
+    }
+    else SDK_Point.trust_Cnt/=2;
+    
+    if(SDK_Point.trust_Cnt>=10)   SDK_Point.trust_flag=1; 
+    else SDK_Point.trust_flag=0;
+    
+    SDK_Recieve_Flag=1;
+    
+    SDK_Target_Offset.x=SDK_TARGET_X_OFFSET;
+    SDK_Target_Offset.y=SDK_TARGET_Y_OFFSET;
+    
+    SDK_Target.x=(Pixel_Size*(40-PointX)*RealLength)/Focal_Length-SDK_Target_Offset.x;
+    SDK_Target.y=0;
+//    SDK_Target.y=(Pixel_Size*(30-SDK_Point.y)*NamelessQuad.Position[_YAW])/Focal_Length
+//      +NamelessQuad.Position[_YAW]*tan(Pitch* DEG2RAD)-SDK_Target_Offset.y;  
+    SDK_Line_DT_Reset(); 
+  }
+  
   else if(*(data_buf+2)==0XC3)//二维码
   {
     SDK_Recieve_Flag=1;
@@ -632,6 +723,47 @@ void SDK_Data_Receive_Prepare(u8 data)
   else state = 0;
 }
 
+static u8 state_front = 0;// by RayWong
+u8 RxBuffer_front[50];
+void SDK_Data_Receive_Prepare_Front(u8 data)
+{
+  static u8 _data_len = 0,_data_cnt = 0;
+  if(state_front==0&&data==0xAA)//帧头1
+  {
+    state_front=1;
+    RxBuffer_front[0]=data;
+  }
+  else if(state_front==1&&data==0xAF)//帧头2
+  {
+    state_front=2;
+    RxBuffer_front[1]=data;
+  }
+  else if(state_front==2&&data<0XFF)//功能字节
+  {
+    state_front=3;
+    RxBuffer_front[2]=data;
+  }
+  else if(state_front==3&&data<50)//数据长度
+  {
+    state_front = 4;
+    RxBuffer_front[3]=data;
+    _data_len = data;
+    _data_cnt = 0;
+  }
+  else if(state_front==4&&_data_len>0)//有多少数据长度，就存多少个
+  {
+    _data_len--;
+    RxBuffer_front[4+_data_cnt++]=data;
+    if(_data_len==0) state_front = 5;
+  }
+  else if(state_front==5)//最后接收数据校验和
+  {
+    state_front = 0;
+    RxBuffer_front[4+_data_cnt]=data;
+    Openmv_Data_Receive_Anl(RxBuffer_front,_data_cnt+5);
+  }
+  else state = 0;
+}
 
 uint16_t SDK_Data_Offset=0;
 void SDK_Data_Prase(void)
@@ -656,16 +788,45 @@ void SDK_Data_Prase(void)
     sdk_prase_cnt=0;
   }
 }
+
+//前向openmv数据解析
+// by RayWong
+uint16_t SDK_Data_Offset_Front=0;
+void SDK_Data_Prase_Front(void)
+{
+  static uint16_t sdk_prase_cnt=0;
+  uint16_t i=0;
+  sdk_prase_cnt++;
+  if(sdk_prase_cnt>=2)//5*2=10ms
+  {
+    if(COM2_Rx_Buf.Tail<12)//0-11数据位正在传输
+    {
+      SDK_Data_Offset_Front=12;
+    }
+    else//12-23数据位正在传输
+    {
+      SDK_Data_Offset_Front=0;
+    }
+    for(i=0;i<12;i++)
+    {
+      SDK_Data_Receive_Prepare_Front(COM2_Rx_Buf.Ring_Buff[SDK_Data_Offset_Front+i]);
+    }
+    sdk_prase_cnt=0;
+  }
+}
 void SDK_Init(void)
 {
   float sdk_mode_default=0;
   SDK_Line_DT_Reset();//复位SDK线检测数据
   SDK_Point_DT_Reset();//复位SDK点检测数据
+  SDK_Rec_DT_Reset();//复位SDK矩形检测数据
+
   ReadFlashParameterOne(SDK_MODE_DEFAULT,&sdk_mode_default);
   if(isnan(sdk_mode_default)==0)
   {
     SDK_Mode_Set=(uint8_t)(sdk_mode_default);
     SDK_DT_Send_Check(SDK_Mode_Set);//初始化opemmv工作模式，默认以上次工作状态配置
+    SDK_DT_Send_Check_Front(WAIT_MODE);//前向openmv仅有矩形检测模式
   } 
 }
 

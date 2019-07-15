@@ -43,8 +43,9 @@ void TIMER0A_Handler(void)				//系统调度中断函数
   US_100_Statemachine();					//超声波传感器状态机更新
   Optflow_Statemachine();					//光流状态机，初始化时存在光流外设
   SDK_Data_Prase();								//SDK数据解析
-  GPS_Data_Prase();								//GPS数据解析
-  KalmanFilter_Horizontal();			//水平位置GPS双观测量Kalman滤波融合	
+  SDK_Data_Prase_Front();         //前向openmvSDK数据解析
+//GPS_Data_Prase();								//GPS数据解析
+//KalmanFilter_Horizontal();			//水平位置GPS双观测量Kalman滤波融合	
   CarryPilot_Control();						//总控制器
 	Accel_Calibration_Check();			//加速度校准检测
   Mag_Calibration_Check();				//磁力计校准检测

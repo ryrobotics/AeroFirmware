@@ -216,13 +216,25 @@ void QuadShow()
     //y=32+32*constrain_float(SDK_Target.y,-100,100)/100;
     //x=64-32*constrain_float(SDK_Target.x,-100,100)/100; 
     //ssd1306_fill_circle(x,y,20*constrain_float(SDK_Point.Pixel,200*SDK_Point.flag,1000)/1000,WHITE);
-    ssd1306_display();
-    LCD_P6x8Str(0,0,"point_x:");  write_6_8_number(95,0,SDK_Point.x);
-    LCD_P6x8Str(0,1,"point_y::"); write_6_8_number(95,1,SDK_Point.y);
-    LCD_P6x8Str(0,2,"point_s:");  write_6_8_number(95,2,SDK_Point.Pixel);
-    LCD_P6x8Str(0,3,"point_f:");  write_6_8_number(95,3,SDK_Point.flag);
-    LCD_P6x8Str(0,4,"Tar_x:");    write_6_8_number(95,4,SDK_Target.x);
-    LCD_P6x8Str(0,5,"Tar_y:");    write_6_8_number(95,5,SDK_Target.y);  
+
+      ssd1306_display();
+      LCD_P6x8Str(0,0,"point_x:");  write_6_8_number(95,0,SDK_Point.x);
+      LCD_P6x8Str(0,1,"point_y::"); write_6_8_number(95,1,SDK_Point.y);
+      LCD_P6x8Str(0,2,"point_s:");  write_6_8_number(95,2,SDK_Point.Pixel);
+      LCD_P6x8Str(0,3,"point_f:");  write_6_8_number(95,3,SDK_Point.flag);
+      LCD_P6x8Str(0,4,"Tar_x:");    write_6_8_number(95,4,SDK_Target.x);
+      LCD_P6x8Str(0,5,"Tar_y:");    write_6_8_number(95,5,SDK_Target.y);  
+    
+//    else if(SDK_Point.flag==2)
+//    {
+//      ssd1306_display();
+//      LCD_P6x8Str(0,0,"RecCt_x:");  write_6_8_number(95,0,SDK_Point.x);
+//      LCD_P6x8Str(0,1,"RecCt_y::"); write_6_8_number(95,1,SDK_Point.y);
+//      LCD_P6x8Str(0,2,"Rec_Len:");  write_6_8_number(95,2,SDK_Point.Pixel);
+//      LCD_P6x8Str(0,3,"RecFlag:");  write_6_8_number(95,3,SDK_Point.flag);
+//      LCD_P6x8Str(0,4,"Tar_x:");    write_6_8_number(95,4,SDK_Target.x);
+//      LCD_P6x8Str(0,5,"Tar_y:");    write_6_8_number(95,5,SDK_Target.y);  
+//    }
   }
   else if(Page_Number==8)
   {
@@ -259,8 +271,8 @@ void QuadShow()
     
     LCD_clear_L(0,6); LCD_clear_L(0,7); 
     if(SDK_Now_Mode==0x01)         LCD_P8x16Str(32,6,"Point Mode");
-    else if(SDK_Now_Mode==0x02)      LCD_P8x16Str(32,6,"Line Mode");
-    
+    else if(SDK_Now_Mode==0x02)    LCD_P8x16Str(32,6,"Line Mode");
+    else if(SDK_Now_Mode==0x03)    LCD_P8x16Str(32,6,"Rec Mode");
     if(Pitch_Control>=Scale_Pecent_Max*Pit_Rol_Max)
     {
       delay_ms(10);

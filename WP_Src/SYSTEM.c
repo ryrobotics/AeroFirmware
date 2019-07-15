@@ -25,13 +25,14 @@ void HardWave_Init(void)
   PID_Paramter_Init_With_Flash();//PID参数初始化
   Init_I2C();//硬件I2C初始化
   Init_MPU6050();//MPU6050陀螺仪、加速度计配置初始化
-  Compass_Init();//磁力计配置初始化
+//  Compass_Init();//磁力计配置初始化
   SPL06_Init();//SPL06气压计配置初始化
   Parameter_Init();//加速度计、磁力计校准参数初始化
   WP_Quad_Init();//根据观测传感器加速度计、磁力计对姿态四元数初始化
   ConfigureUART1();//串口1初始化，匿名地面站
   ConfigureUART3();//串口3初始化，OPENMV、树莓派视觉模组、SDK模式串口
-  Set_GPS_USART();//串口2初始化，使用UBLOX协议配置GPS模块
+  ConfigureUART2();//串口2初始化，副OPENMV
+//  Set_GPS_USART();//串口2初始化，使用UBLOX协议配置GPS模块
   ConfigureUART7();//串口7初始化.超声波模块/TOF解析串口	
   ConfigureUART6();//串口6初始化，光流模块LC306数据解析
   SDK_Init();//SDK模式初始化

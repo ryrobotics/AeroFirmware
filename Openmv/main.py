@@ -9,6 +9,9 @@ sensor.skip_frames(time = 2000)     # WARNING: If you use QQVGA it may take seco
 sensor.set_auto_gain(False) # 在进行颜色追踪时，必须关闭
 sensor.set_auto_whitebal(False) # 在进行颜色追踪时，必须关闭
 clock = time.clock()                # to process a frame sometimes.
+# sensor.set_vflip(1)       #竖直反转
+# sensor.set_hmirror(1)     #水平反转
+
 
 up_roi   = [0,   0, 80, 15]#上采样区0
 down_roi = [0, 55, 80, 15]#下采样区0
@@ -21,6 +24,14 @@ class Dot(object):
     x = 0
     y = 0
     pixels = 0
+    num = 0
+    ok = 0
+    flag = 0
+
+class Rectangle(object):
+    x = 0
+    y = 0
+    width = 0
     num = 0
     ok = 0
     flag = 0
@@ -40,10 +51,11 @@ class receive(object):
 Receive=receive()
 
 class ctrl(object):
-    work_mode = 0x02 #工作模式.默认是点检测，可以通过串口设置成其他模式
+    work_mode = 0x03 #工作模式.默认是点检测，可以通过串口设置成其他模式
 
 ctrl=ctrl()
 
+rectangle=Rectangle()
 dot  = Dot()
 up   = singleline_check()
 down = singleline_check()
@@ -63,6 +75,32 @@ def pack_linetrack_data():
     #清零线检测偏移数据和倾角数据，使得在没有检测到线时，输出为零
     singleline_check.rho_err = 0
     singleline_check.theta_err = 0
+
+    lens = len(pack_data)#数据包大小
+    pack_data[3] = lens-5;#有效数据个数
+
+    i = 0
+    sum = 0
+
+    #和校验
+    while i<(lens-1):
+        sum = sum + pack_data[i]
+        i = i+1
+    pack_data[lens-1] = sum;
+
+    return pack_data
+
+#矩形检测数据打包
+def pack_rectangle_data():
+
+    pack_data=bytearray([0xAA,0xAF,0xF1,0x00,
+        rectangle.x>>8,rectangle.x,
+        rectangle.y>>8,rectangle.y,rectangle.num>>8,rectangle.num,
+        rectangle.flag,0x00])
+
+    #清零点检测偏移数据和倾角数据，使得在没有检测到点时，输出为零
+    rectangle.x = 0
+    rectangle.y = 0
 
     lens = len(pack_data)#数据包大小
     pack_data[3] = lens-5;#有效数据个数
@@ -104,7 +142,7 @@ def pack_block_data():
 
     return pack_data
 
-#串口数据解析 如果是线检测请发送数据：AA AF F1 01 02 4D 如果是点检测请发送数据：AA AF F1 01 01 4C
+#串口数据解析 如果是线检测请发送数据：AA AF FC 01 02 4D 如果是点检测请发送数据：AA AF F1 01 01 4C
 def Receive_Anl(data_buf,num):
 
     #和校验
@@ -158,7 +196,7 @@ def Receive_Prepare(data):
             Receive.state = 0
 
     elif Receive.state==3:
-        if data <= 33:
+        if data <= 3:
             Receive.state = 4
             Receive.uart_buf.append(data) #将数据保存到数组里面
             Receive._data_len = data
@@ -224,6 +262,29 @@ def check_dot(img):
     #发送数据
     uart.write(pack_block_data())
 
+
+#矩形检测函数
+def check_rectangle(img):
+    for r in img.find_rects(threshold = 29000):
+        rectangle.width=r.corners()[1][0]-r.corners()[0][0]
+        rectangle.x=(r.corners()[0][0]+r.corners()[1][0])//2
+        rectangle.y=(r.corners()[0][1]+r.corners()[2][1])//2
+#       print(rectangle.pixels)
+#       print(rectangle.y)
+        rectangle.ok = 1
+        img.draw_rectangle(r.rect(), color = (255, 0, 0))
+
+        #判断标志位 赋值像素点数据
+    rectangle.flag = rectangle.ok
+    rectangle.num = rectangle.width
+
+        #清零标志位
+    rectangle.width = 0
+    rectangle.ok = 0
+
+        #发送数据
+    uart.write(pack_rectangle_data())
+
 def fine_border(img,area,area_roi):
     #roi是“感兴趣区”通过设置不同的感兴趣区，可以判断线段是一条还是两条，是T型线，还是十字、还是7字线
     singleline_check.flag1 = img.get_regression([(255,255)],roi=area_roi, robust = True)
@@ -275,20 +336,35 @@ def check_line(img):
 
 while(True):
     clock.tick()
-    if (ctrl.work_mode&0x01)!=0:
+    #矩形检测
+    if (ctrl.work_mode==0x03):
+        sensor.set_pixformat(sensor.RGB565)
+        img = sensor.snapshot()
+        check_rectangle(img)
+        LED(3).toggle()      #亮灯
+
+    #线检测
+    if (ctrl.work_mode==0x02):
+        sensor.set_pixformat(sensor.GRAYSCALE)
+        img = sensor.snapshot().binary([THRESHOLD])
+        check_line(img)
+        LED(2).toggle()  #亮灯
+
+    #点检测
+    if (ctrl.work_mode==0x01):
         sensor.set_pixformat(sensor.RGB565)
         img = sensor.snapshot()
         check_dot(img)
         LED(1).toggle()      #亮灯
 
-    #线检测
-    if (ctrl.work_mode&0x02)!=0:
-        sensor.set_pixformat(sensor.GRAYSCALE)
-        img = sensor.snapshot().binary([THRESHOLD])
-        check_line(img)
-        LED(3).toggle()  #亮灯
+    #空闲检测
+    if (ctrl.work_mode==0x0F):
+        LED(3).toggle()      #亮灯
+        time.sleep(100)
+        LED(1).toggle()      #亮灯
+        print(ctrl.work_mode)
     #接收串口数据
     uart_read_buf()
-    #print(clock.fps())#打印帧率
+    #print(clock.fps())#打印帧率2
 
 

@@ -146,16 +146,47 @@ void OpticalFlow_Control(uint8_t force_brake_flag)
         else if(ABS(SDK_Target_Yaw_Gyro)<=20) OpticalFlow_Y_Vel_Control(5);
         else if(ABS(SDK_Target_Yaw_Gyro)<=50) OpticalFlow_Y_Vel_Control(3);
         else OpticalFlow_Y_Vel_Control(2);
+//        ÂýËÙÄ£Ê½
 //        if(ABS(SDK_Target_Yaw_Gyro)<=10) OpticalFlow_Y_Vel_Control(5);
 //        else if(ABS(SDK_Target_Yaw_Gyro)<=20) OpticalFlow_Y_Vel_Control(3);
 //        else if(ABS(SDK_Target_Yaw_Gyro)<=50) OpticalFlow_Y_Vel_Control(2);
 //        else OpticalFlow_Y_Vel_Control(1);
-        //OpticalFlow_Y_Vel_Control(0);
+//        OpticalFlow_Y_Vel_Control(0);
         OpticalFlow_Pos_Ctrl_Expect.x=0;
         OpticalFlow_Pos_Ctrl_Expect.y=0;
         force_brake_flag=1;
       }
       else if(SDK_Point.flag==1)//¸ú×Ùµã¼ì²â
+      {
+        SDK_Ctrl_Cnt++;
+        if(SDK_Ctrl_Cnt>=4)//20ms
+        {
+          Total_Controller.SDK_Roll_Position_Control.Expect=0;
+          Total_Controller.SDK_Roll_Position_Control.FeedBack=SDK_Target.x;
+          PID_Control_SDK_Err_LPF(&Total_Controller.SDK_Roll_Position_Control,SDK_Point.trust_flag);
+          
+          Total_Controller.SDK_Pitch_Position_Control.Expect=0;
+          Total_Controller.SDK_Pitch_Position_Control.FeedBack=SDK_Target.y;
+          PID_Control_SDK_Err_LPF(&Total_Controller.SDK_Pitch_Position_Control,SDK_Point.trust_flag);
+          
+          accel_target.x=constrain_float(Total_Controller.SDK_Roll_Position_Control.Control_OutPut,
+                                         -Total_Controller.Optical_Speed_Control.Control_OutPut_Limit,
+                                         Total_Controller.Optical_Speed_Control.Control_OutPut_Limit);                             
+          Total_Controller.Roll_Angle_Control.Expect=constrain_float(fast_atan(accel_target.x/(GRAVITY_MSS*100))*RAD2DEG,-30,30);//roll
+          
+          
+          accel_target.y=constrain_float(Total_Controller.SDK_Pitch_Position_Control.Control_OutPut,
+                                         -Total_Controller.Optical_Speed_Control.Control_OutPut_Limit,
+                                         Total_Controller.Optical_Speed_Control.Control_OutPut_Limit);//450
+          Total_Controller.Pitch_Angle_Control.Expect=constrain_float(fast_atan(accel_target.y*Cos_Roll/(GRAVITY_MSS*100))*RAD2DEG,-30,30);//pitch
+          
+          SDK_Ctrl_Cnt=0;
+        }
+        OpticalFlow_Pos_Ctrl_Expect.x=0;
+        OpticalFlow_Pos_Ctrl_Expect.y=0;
+        force_brake_flag=1;
+      }
+      else if(SDK_Point.flag==2)//¸ú×Ù¾ØÐÎ¼ì²â
       {
         SDK_Ctrl_Cnt++;
         if(SDK_Ctrl_Cnt>=4)//20ms

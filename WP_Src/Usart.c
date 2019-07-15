@@ -159,12 +159,15 @@ void UART2_IRQHandler(void)
   while(UARTCharsAvail(UART2_BASE))//判断FIFO是否还有数据				
   {		
     //输出得到的数据
+    RingBuf_Write(UARTCharGet(UART2_BASE),&COM2_Rx_Buf,24);//往环形队列里面写数据
+    //SDK_Data_Receive_Prepare(UARTCharGet(UART3_BASE));		
+    /*  原代码  
     RingBuf_Write(UARTCharGet(UART2_BASE),&COM2_Rx_Buf,200);//往环形队列里面写数据
     if(COM2_Rx_Buf.Ring_Buff[0]!=0XB5)
     {
       COM2_Rx_Buf.Head=1;
       COM2_Rx_Buf.Tail=0; 
-    }		
+    }	*/	
   }
 }
 
@@ -191,7 +194,7 @@ void USART2_Send(uint8_t *pui8Buffer, uint32_t ui32Count)//发送N个字节长度的数据
 @作者：无名小哥
 @日期：2019年01月27日
 *************************************************************/
-void ConfigureUART2(unsigned long bound)//串口2初始化
+void ConfigureUART2(void)//串口2初始化
 {
   SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);//使能GPIO外设		
   SysCtlPeripheralEnable(SYSCTL_PERIPH_UART2);//使能UART外设
@@ -203,11 +206,11 @@ void ConfigureUART2(unsigned long bound)//串口2初始化
   GPIOPinConfigure(GPIO_PD6_U2RX);//GPIO模式配置 PD6--RX PD7--TX 
   GPIOPinConfigure(GPIO_PD7_U2TX);
   GPIOPinTypeUART(GPIO_PORTD_BASE, GPIO_PIN_6 | GPIO_PIN_7);//GPIO的UART模式配置
-  UARTConfigSetExpClk(UART2_BASE, SysCtlClockGet(), bound,
+  UARTConfigSetExpClk(UART2_BASE, SysCtlClockGet(), 115200,
                       (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                        UART_CONFIG_PAR_NONE));
   UARTFIFODisable(UART2_BASE);//使能UART2中断	
-  UARTIntEnable(UART2_BASE,UART_INT_RX |UART_INT_RT);//使能UART0接收中断		
+  UARTIntEnable(UART2_BASE,UART_INT_RX |UART_INT_RT);//使能UART2接收中断		
   UARTIntRegister(UART2_BASE,UART2_IRQHandler);//UART中断地址注册	
   IntPrioritySet(INT_UART2, USER_INT1);
 }
@@ -265,7 +268,7 @@ void ConfigureUART3(void)//串口3初始化
   UARTConfigSetExpClk(UART3_BASE, SysCtlClockGet(), 115200,
                       (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                        UART_CONFIG_PAR_NONE));
-  UARTFIFODisable(UART3_BASE);//使能UART0中断	
+  UARTFIFODisable(UART3_BASE);//使能UART3中断	
   UARTIntEnable(UART3_BASE,UART_INT_RX);//使能UART3接收中断		
   UARTIntRegister(UART3_BASE,UART3_IRQHandler);//UART3中断地址注册	
   IntPrioritySet(INT_UART3, USER_INT3);
