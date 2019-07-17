@@ -7,7 +7,6 @@
 #include "stdlib.h"
 
 
-//#define  OLED_WORK_MODE_I2C  1//OLED使用I2C模式驱动，当采用SPI模式时，注释本行即可
 
 #define XLevelL  	0x00
 #define XLevelH  	0x10
@@ -45,7 +44,7 @@ void OLED_GPIO_Init(void)
 *************************************************************/
 void SDA_OUT(void)
 {
-  GPIOPinTypeGPIOOutput(GPIO_OLED, GPIO_PIN_4);// Enable the GPIO pins for the LED (PF2 & PF3).
+  GPIOPinTypeGPIOOutput(GPIO_OLED, GPIO_PIN_4);
 }
 
 /***********************************************************
@@ -58,7 +57,7 @@ void SDA_OUT(void)
 *************************************************************/
 void SDA_IN(void)
 {
-  GPIOPinTypeGPIOInput(GPIO_OLED, GPIO_PIN_4);// Enable the GPIO pins for the LED (PF2 & PF3).
+  GPIOPinTypeGPIOInput(GPIO_OLED, GPIO_PIN_4);
 }
 
 /***************************
@@ -249,7 +248,7 @@ void OLED_CLS(void)
 /*********************OLED初始化************************************/
 void OLED_Init_I2C(void)
 {
-  Delay_Ms(100);//初始化之前的延时很重要！
+  //Delay_Ms(100);//初始化之前的延时很重要！
   OLED_WrCmd(0xae);//--turn off oled panel
   OLED_WrCmd(0x00);//---set low column address
   OLED_WrCmd(0x10);//---set high column address

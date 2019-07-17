@@ -2,14 +2,18 @@
 #ifndef __OLED_H
 #define __OLED_H
 
+
+//#define  OLED_WORK_MODE_I2C//OLED使用I2C模式驱动，当采用SPI模式时，注释本行即可
+
+
 #define Bit_SET   1
 #define Bit_RESET 0
 #define SYSCTL_PERIPH_GPIO_OLED SYSCTL_PERIPH_GPIOA
 #define GPIO_OLED   GPIO_PORTA_BASE 
 #define LCD_DCout(data)		  GPIOPinWrite(GPIO_OLED, GPIO_PIN_2, data ? GPIO_PIN_2 : 0)//DC
-#define LCD_RSTout(data)		GPIOPinWrite(GPIO_OLED, GPIO_PIN_3, data ? GPIO_PIN_3 : 0)//DC
-#define LCD_SDAout(data)		GPIOPinWrite(GPIO_OLED, GPIO_PIN_4, data ? GPIO_PIN_4 : 0)//DC
-#define LCD_SCLout(data)		GPIOPinWrite(GPIO_OLED, GPIO_PIN_5, data ? GPIO_PIN_5 : 0)//DC
+#define LCD_RSTout(data)		GPIOPinWrite(GPIO_OLED, GPIO_PIN_3, data ? GPIO_PIN_3 : 0)//RST
+#define LCD_SDAout(data)		GPIOPinWrite(GPIO_OLED, GPIO_PIN_4, data ? GPIO_PIN_4 : 0)//SDA
+#define LCD_SCLout(data)		GPIOPinWrite(GPIO_OLED, GPIO_PIN_5, data ? GPIO_PIN_5 : 0)//SCL
 
 
 #define READ_SDA   GPIOPinRead(GPIO_OLED,GPIO_PIN_4)	//SDA 

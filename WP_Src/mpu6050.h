@@ -4,6 +4,9 @@
 #include "myiic.h"   												  	  
 #include "Filter.h"
 
+
+#define IMU_MPU6050_ID   0x68
+#define IMU_ICM20689_ID  0x98
 //****************************************
 // MPU6050
 //****************************************
@@ -25,6 +28,7 @@
 #define	MPU_CONFIG		0x1A
 #define	GYRO_CONFIG		0x1B
 #define	ACCEL_CONFIG  0x1C
+#define ACCEL_CONFIG2 0x1D
 #define	ACCEL_XOUT_H	0x3B
 #define	ACCEL_XOUT_L	0x3C
 #define	ACCEL_YOUT_H	0x3D
