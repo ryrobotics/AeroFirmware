@@ -36,6 +36,12 @@ void Init_MPU6050(void)//MPU6050初始化
 		i2cWrite(MPU_ADRESS,ACCEL_CONFIG, 0x18);// Accel scale 16g (2048 LSB/g)	
 		i2cWrite(MPU_ADRESS,ACCEL_CONFIG2,0x03);//设置加速度计内部低通滤波频率范围，加速度44.8hz，噪声带宽61.5hz
 	}
+  delay_ms(500);
+  IMU_Calibration();
+  Set_Cutoff_Frequency(Imu_Sampling_Freq, 50,&Gyro_Parameter);//姿态角速度反馈滤波参数  50
+  Set_Cutoff_Frequency(Imu_Sampling_Freq, 30,&Accel_Parameter);//姿态解算加计修正滤波值 30
+  Set_Cutoff_Frequency(Imu_Sampling_Freq, 2,&Calibrate_Parameter);//传感器校准加计滤波值
+  Set_Cutoff_Frequency(Imu_Sampling_Freq, 60,&Ins_Accel_Parameter);//INS加计滤波值
 }
 /***********************************************************
 @函数名：MPU6050_Read_Data
