@@ -384,7 +384,7 @@ uint8_t SDK_Recieve_Flag=0;
 Vector2f SDK_Target,SDK_Target_Offset;
 float SDK_Target_Yaw_Gyro=0;
 #define  Pixel_Size    0.0048
-#define  Focal_Length  0.42
+#define  Focal_Length  0.28//0.35
 
 void SDK_Line_DT_Reset()
 {
