@@ -383,8 +383,11 @@ Point SDK_Point;
 uint8_t SDK_Recieve_Flag=0;
 Vector2f SDK_Target,SDK_Target_Offset;
 float SDK_Target_Yaw_Gyro=0;
-#define  Pixel_Size    0.0048
-#define  Focal_Length  0.28//0.35
+#define  Pixel_Size    0.0024//0.0048
+#define  Focal_Length  0.28
+
+int16_t PointX=0;
+float RealLength=0;
 
 void SDK_Line_DT_Reset()
 {
@@ -445,13 +448,24 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
     
     SDK_Point_DT_Reset();
   }
-  else if(*(data_buf+2)==0XF2)//点检测
+  else if(*(data_buf+2)==0XF2)//矩形检测
   {
     SDK_Now_Mode=0x01;
     SDK_Point.x=*(data_buf+4)<<8|*(data_buf+5);
     SDK_Point.y=*(data_buf+6)<<8|*(data_buf+7);
-    SDK_Point.Pixel=*(data_buf+8)<<8|*(data_buf+9);
+    SDK_Point.Pixel=*(data_buf+8)<<8|*(data_buf+9);//实际为矩形边长
     SDK_Point.flag=*(data_buf+10);
+    
+//  RealLength=100/(SDK_Point.Pixel)*0.28;//真实距离 cm
+    RealLength=100/(SDK_Point.Pixel*Pixel_Size)*0.28;//真实距离 cm
+		PointX = SDK_Point.x;
+    
+    if(SDK_Point.x>=70&&SDK_Point.x<=90)
+      PointX=80;
+    else if(SDK_Point.x>=110)
+      PointX=90;
+    else if(SDK_Point.x<=60)
+      PointX=70;
     
     if(SDK_Point.flag!=0)  
     {
@@ -467,10 +481,10 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
     SDK_Target_Offset.x=SDK_TARGET_X_OFFSET;
     SDK_Target_Offset.y=SDK_TARGET_Y_OFFSET;
     
-    SDK_Target.x=(Pixel_Size*(40-SDK_Point.x)*NamelessQuad.Position[_YAW])/Focal_Length
-      +NamelessQuad.Position[_YAW]*tan(Roll* DEG2RAD)-SDK_Target_Offset.x;
-    SDK_Target.y=(Pixel_Size*(30-SDK_Point.y)*NamelessQuad.Position[_YAW])/Focal_Length
-      +NamelessQuad.Position[_YAW]*tan(Pitch* DEG2RAD)-SDK_Target_Offset.y;  
+    SDK_Target.x=0.1*(Pixel_Size*(80-PointX)*RealLength)/Focal_Length-SDK_Target_Offset.x;
+    SDK_Target.y=0;
+//    SDK_Target.y=(Pixel_Size*(30-SDK_Point.y)*NamelessQuad.Position[_YAW])/Focal_Length
+//      +NamelessQuad.Position[_YAW]*tan(Pitch* DEG2RAD)-SDK_Target_Offset.y;  
     SDK_Line_DT_Reset(); 
   }
   else if(*(data_buf+2)==0XC3)//二维码
