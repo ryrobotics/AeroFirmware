@@ -6,7 +6,7 @@
 #include <string.h>
 #include "binary.h"
 #include "ssd1306.h"
-
+#include "oled.h"
 
 static uint8_t _vccstate;
 static int16_t _width, _height, WIDTH, HEIGHT, cursor_x, cursor_y;
@@ -14,10 +14,6 @@ static uint8_t textsize, rotation;
 static uint16_t textcolor, textbgcolor;
 bool wrap,   // If set, 'wrap' text at right edge of display
 _cp437; // If set, use correct CP437 charset (default is off)
-
-
-
-
 
 
 static volatile bool use_i2c = false;
@@ -136,7 +132,7 @@ void ssd1306_command(uint8_t c)
 #ifdef OLED_WORK_MODE_I2C
   OLED_WrCmd(c);
 #else
-  LCD_WrCmd(c); 
+  LCD_WrCmd(c);
 #endif
 }
 
