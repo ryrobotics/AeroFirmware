@@ -35,4 +35,4 @@ JLinkLog.txt
 *.sct
 *.uvguix.*
 build/*
-!WP_Ctrl/namelesscorun_opticalflow.o
+!WP_Ctrl/copyright.o

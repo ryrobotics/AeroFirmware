@@ -130,7 +130,7 @@ void set_rotation(uint8_t x)
 void ssd1306_command(uint8_t c)
 {
 #ifdef OLED_WORK_MODE_I2C
-  OLED_WrCmd(c);
+  OLED_WrCmd
 #else
   LCD_WrCmd(c);
 #endif

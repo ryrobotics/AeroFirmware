@@ -424,8 +424,7 @@ Testime T1,T2;
 float Sensor_Time=0;
 void Get_Status_Feedback(void)
 {
-	Test_Period(&T1);
-  //更新姿态数据
+	Test_Period(&T1);//更新姿态数据
   Sensor_Update();//传感器数据更新
 	Test_Period(&T2);
 	Sensor_Time=T2.Now_Time-T1.Now_Time;

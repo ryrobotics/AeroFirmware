@@ -128,20 +128,20 @@ void  SINS_Prepare(void)
 
 
 
-#define Ra  0.5f//0.1   0.5  30
-#define KALMAN_DT 0.005f
+#define Ra  2.0f//1.0 0.5
+#define KALMAN_DT 0.1f
 float R[2]={0.5f*Ra*KALMAN_DT*KALMAN_DT,Ra*KALMAN_DT};//{1.0e-6f,5.0e-4f};{5.0e-6f,6.0e-4f}
-float Q=500;//30  100   150  300
+float Q=30;//50  30  10  500
 #define  Observation_Err_Max   500//cm
 float Acce_Bias_Gain[3]={
-  0.0005,//0.001
+  0.005,//0.001
   0.0005,//0.001
   0.0005,//0.001
 };
 float Pre_conv[4]=
 {
-  0.18,0.1,//0.001,0,
-  0.1,0.18//0,0.001
+  0.18,0.1,
+  0.1,0.18
 };//上一次协方差
 /***********************************************************
 @函数名：KalmanFilter
@@ -171,7 +171,7 @@ void  KalmanFilter(float Observation,//位置观测量
                    float Q,
                    float dt,
                    uint16 N,
-                   uint8_t update_flag)
+                   uint8_t *update_flag)
 {
   uint16 Cnt=0;
   static uint16 Speed_Sync_Cnt=0;
@@ -185,7 +185,7 @@ void  KalmanFilter(float Observation,//位置观测量
 	{
 	  	if((ABS(observation_div)<=30*ABS(Ins_Kf->Vel_History[N][Pos_Delay_Cnt]))
 						&&ABS(observation_acc)<=5000//5000cm/s^2约等于5g加速度，多旋翼动力装达不到
-							&&ABS(observation_div)<=1500)//15m/s			
+							&&ABS(observation_div)<=1000)//10m/s	1500		
 			{
 				last_observation=Observation;				
 			}
@@ -209,13 +209,13 @@ void  KalmanFilter(float Observation,//位置观测量
   Ins_Kf->Acceleration[N]=Ins_Kf->Acce_Bias[N]+Ins_Kf->Acceleration[N];
   Ins_Kf->Position[N] +=Ins_Kf->Speed[N]*dt+(Ins_Kf->Acceleration[N]*dt*dt)/2.0f;
   Ins_Kf->Speed[N]+=Ins_Kf->Acceleration[N]*dt;
-  if(update_flag==1)
+  if(*update_flag==1)
   {
     //先验协方差
-    Ctemp=Pre_conv[1]+Pre_conv[3]*dt;
-    Temp_conv[0]=Pre_conv[0]+Pre_conv[2]*dt+Ctemp*dt+R[0];
+    Ctemp=Pre_conv[1]+Pre_conv[3]*KALMAN_DT;
+    Temp_conv[0]=Pre_conv[0]+Pre_conv[2]*KALMAN_DT+Ctemp*KALMAN_DT+R[0];
     Temp_conv[1]=Ctemp;
-    Temp_conv[2]=Pre_conv[2]+Pre_conv[3]*dt;;
+    Temp_conv[2]=Pre_conv[2]+Pre_conv[3]*KALMAN_DT;;
     Temp_conv[3]=Pre_conv[3]+R[1];
     //计算卡尔曼增益
     Conv_Z=Temp_conv[0]+Q_Temp;
@@ -242,16 +242,17 @@ void  KalmanFilter(float Observation,//位置观测量
     Pre_conv[1]=(1-k[0])*Temp_conv[1];
     Pre_conv[2]=Temp_conv[2]-k[1]*Temp_conv[0];
     Pre_conv[3]=Temp_conv[3]-k[1]*Temp_conv[1]; 
+		*update_flag=0;
   }
   
-  for(Cnt=Num-1;Cnt>0;Cnt--)//2.5ms滑动一次
+  for(Cnt=Num-1;Cnt>0;Cnt--)//5ms滑动一次
   {
     Ins_Kf->Pos_History[N][Cnt]=Ins_Kf->Pos_History[N][Cnt-1];
   }
   Ins_Kf->Pos_History[N][0]=Ins_Kf->Position[N];
   
   Speed_Sync_Cnt++;
-  if(Speed_Sync_Cnt>=1)//100ms滑动一次
+  if(Speed_Sync_Cnt>=2)//10ms滑动一次
   {
     for(Cnt=Num-1;Cnt>0;Cnt--)
     {
@@ -264,11 +265,12 @@ void  KalmanFilter(float Observation,//位置观测量
 
 
 
-#define SPL06_Sync_Cnt  25//30
-#define HCSR04_Sync_Cnt 20//0
+#define SPL06_Sync_Cnt  12//30
+#define HCSR04_Sync_Cnt 10//0
 uint16 High_Delay_Cnt=0;
 uint8_t Observation_Update_Flag=0;
 float Observation_Altitude=0;
+uint8_t altitude_updtate_flag=0;
 /***********************************************************
 @函数名：Observation_Tradeoff
 @入口参数：uint8_t HC_SR04_Enable
@@ -282,42 +284,66 @@ void Observation_Tradeoff(uint8_t HC_SR04_Enable)
   static uint8_t observation_flag=1,last_observation_flag=1;
   uint16 Cnt=0;
   last_observation_flag=observation_flag;
-  if(HC_SR04_Enable==0)//无超声波参与
+  if(HC_SR04_Enable==0)//无超声波/对地传感器参与
   {
     Observation_Altitude=WP_Sensor.baro_altitude;//高度观测量
     High_Delay_Cnt=SPL06_Sync_Cnt;
-    Observation_Update_Flag=1;
-    observation_flag=1;
 		observation_div=WP_Sensor.baro_altitude_div;
 		observation_acc=WP_Sensor.baro_altitude_acc;
+		if(WP_Sensor.baro_updtate_flag==1)
+		{
+			altitude_updtate_flag=WP_Sensor.baro_updtate_flag;
+			WP_Sensor.baro_updtate_flag=0;
+		}
   }
-  else//有超声波参与
-  {    
+  else//有超声波/对地传感器参与
+  {
+#if Ground_Distance_Sensor==US100    
     if(Sensor_Flag.Hcsr04_Health==1)
     {
       Observation_Altitude=US_Distance;
       High_Delay_Cnt=HCSR04_Sync_Cnt;
       observation_flag=2;
-      if(US_100_Update_Flag==1)
-      {
-        Observation_Update_Flag=US_100_Update_Flag;
-        US_100_Update_Flag=0;
-      }
 			observation_div=US_Distance_Div;
 			observation_acc=US_Distance_Acc;
+			if(WP_Sensor.us100_updtate_flag==1)
+			{
+				altitude_updtate_flag=WP_Sensor.us100_updtate_flag;
+				WP_Sensor.us100_updtate_flag=0;
+			}
     }
+#else		
+    if(tfdata.health==1)
+    {
+      Observation_Altitude=tfdata.distance;
+      High_Delay_Cnt=5;
+      observation_flag=2;
+			observation_div=tfdata.div;
+			observation_acc=tfdata.acc;
+			if(WP_Sensor.tfmini_updtate_flag==1)
+			{
+				altitude_updtate_flag=WP_Sensor.tfmini_updtate_flag;
+				WP_Sensor.tfmini_updtate_flag=0;
+			}
+    }
+#endif		
+		
     else
     {
       Observation_Altitude=WP_Sensor.baro_altitude;//高度观测量
       High_Delay_Cnt=SPL06_Sync_Cnt;
-      Observation_Update_Flag=1;
-      observation_flag=1;
 			observation_div=WP_Sensor.baro_altitude_div;
 			observation_acc=WP_Sensor.baro_altitude_acc;
+			if(WP_Sensor.baro_updtate_flag==1)
+			{
+				altitude_updtate_flag=WP_Sensor.baro_updtate_flag;
+				WP_Sensor.baro_updtate_flag=0;
+			}
     } 
     
     if(observation_flag==2&&last_observation_flag==1)//气压计切超声波
     {
+#if Ground_Distance_Sensor==US100 
       NamelessQuad.Position[_YAW]=US_Distance;
       for(Cnt=Num-1;Cnt>0;Cnt--){NamelessQuad.Pos_History[_YAW][Cnt]=US_Distance;}
       NamelessQuad.Pos_History[_YAW][0]=US_Distance;
@@ -325,6 +351,15 @@ void Observation_Tradeoff(uint8_t HC_SR04_Enable)
       
       Origion_NamelessQuad.Position[_YAW]=US_Distance;
       Origion_NamelessQuad.Speed[_YAW]=0;
+#else	
+      NamelessQuad.Position[_YAW]=tfdata.distance;
+      for(Cnt=Num-1;Cnt>0;Cnt--){NamelessQuad.Pos_History[_YAW][Cnt]=tfdata.distance;}
+      NamelessQuad.Pos_History[_YAW][0]=tfdata.distance;
+      Total_Controller.High_Position_Control.Expect=tfdata.distance;//将惯导高度设置为期望高度，有且仅设置一次
+      
+      Origion_NamelessQuad.Position[_YAW]=tfdata.distance;
+      Origion_NamelessQuad.Speed[_YAW]=0;
+#endif
     }
     else if(observation_flag==1&&last_observation_flag==2)//超声波切气压计
     {
@@ -354,15 +389,18 @@ void Strapdown_INS_High_Kalman(void)
   Delta_T=SINS_High_Delta.Time_Delta/1000.0f;
   if(Delta_T>2*WP_Duty_Dt||Delta_T<WP_Duty_Dt||isnan(Delta_T)!=0)   Delta_T=WP_Duty_Dt;
   Observation_Tradeoff(1);
-  KalmanFilter(Observation_Altitude,//位置观测量
-               High_Delay_Cnt,//观测传感器延时量
-               &NamelessQuad,//惯导结构体
-               Origion_NamelessQuad.Acceleration[_YAW],//系统原始驱动量，惯导加速度
-               R,
-               Q,
-               Delta_T,
-               _YAW,
-               1);
+	if(Gyro_Safety_Calibration_Flag==1)
+	{
+		KalmanFilter(Observation_Altitude,//位置观测量
+								 High_Delay_Cnt,//观测传感器延时量
+								 &NamelessQuad,//惯导结构体
+								 Origion_NamelessQuad.Acceleration[_YAW],//系统原始驱动量，惯导加速度
+								 R,
+								 Q,
+								 Delta_T,
+								 _YAW,
+								 &altitude_updtate_flag);
+	}
 }
 
 /*************************以下计算球面投影距离内容源于APM3.2 AP.Math.c文件******************************/

@@ -40,7 +40,11 @@ void TIMER0A_Handler(void)				//系统调度中断函数
   Test_Period(&Time0_Delta);
   Remote_Control();								//遥控器数据解析
   Get_Status_Feedback();					//获取姿态数据、水平与竖直方向惯导数据
-  US_100_Statemachine();					//超声波传感器状态机更新
+#if (Ground_Distance_Sensor==US100)	
+		US_100_Statemachine();					//超声波传感器状态机更新
+#else
+		TFmini_Statemachine();          //激光TFMINI_PLUS传感器状态机更新
+#endif	
   Optflow_Statemachine();					//光流状态机，初始化时存在光流外设
   SDK_Data_Prase();								//SDK数据解析
   GPS_Data_Prase();								//GPS数据解析
