@@ -349,8 +349,13 @@ void UART7_IRQHandler(void)//UART2中断函数
   while(UARTCharsAvail(UART7_BASE))//判断FIFO是否还有数据			
   {			
     //输出得到的数据			
-    //UARTCharPut(UART1_BASE,UARTCharGet(UART1_BASE));
-    RingBuf_Write(UARTCharGet(UART7_BASE),&COM7_Rx_Buf,4);//往环形队列里面写数据		
+    //UARTCharPut(UART1_BASE,UARTCharGet(UART1_BASE));36
+    //RingBuf_Write(UARTCharGet(UART7_BASE),&COM7_Rx_Buf,4);//往环形队列里面写数据
+#if (Ground_Distance_Sensor==US100)	
+		RingBuf_Write(UARTCharGet(UART7_BASE),&COM7_Rx_Buf,4);//往环形队列里面写数据
+#else
+		RingBuf_Write(UARTCharGet(UART7_BASE),&COM7_Rx_Buf,18);//往环形队列里面写数据	
+#endif		
   }
 }
 
@@ -385,9 +390,15 @@ void ConfigureUART7(void)//串口7初始化
   GPIOPinConfigure(GPIO_PE0_U7RX);//GPIO模式配置 PE0--RX PE1--TX 
   GPIOPinConfigure(GPIO_PE1_U7TX);
   GPIOPinTypeUART(GPIO_PORTE_BASE, GPIO_PIN_0 | GPIO_PIN_1);//GPIO的UART模式配置
+#if (Ground_Distance_Sensor==US100)	
   UARTConfigSetExpClk(UART7_BASE, SysCtlClockGet(), 9600,
                       (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
                        UART_CONFIG_PAR_NONE));
+#else
+  UARTConfigSetExpClk(UART7_BASE, SysCtlClockGet(), 115200,
+                      (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+                       UART_CONFIG_PAR_NONE));	
+#endif
   UARTFIFODisable(UART7_BASE);//使能UART0中断	
   UARTIntEnable(UART7_BASE,UART_INT_RX);//使能UART0接收中断		
   UARTIntRegister(UART7_BASE,UART7_IRQHandler);//UART中断地址注册	
@@ -1002,7 +1013,7 @@ void ANO_SEND_StateMachine(void)//各组数据循环发送
 void Vcan_Send(void)//山外地面站发送
 {
   static float DataBuf[8];	
-/*
+
 	DataBuf[0]=Pitch;//惯导高度
   DataBuf[1]=Roll;//惯导速度
   DataBuf[2]=Yaw;;//惯导加速度
@@ -1011,7 +1022,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=Yaw_Observation;
   DataBuf[6]=0;
   DataBuf[7]=0;
-
+/*
   DataBuf[0]=NamelessQuad.Position[_YAW];//惯导高度
   DataBuf[1]=NamelessQuad.Speed[_YAW];//惯导速度
   DataBuf[2]=observation_div;//NamelessQuad.Acceleration[_YAW];;//惯导加速度
@@ -1067,7 +1078,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[4]=opt_filter_data.x;
   DataBuf[5]=opt_filter_data.y;
   DataBuf[6]=opt_gyro_filter_data.x;
-  DataBuf[7]=opt_gyro_filter_data.y;*/
+  DataBuf[7]=opt_gyro_filter_data.y;
   
   DataBuf[0]=OpticalFlow_SINS.Position[_PITCH];
   DataBuf[1]=OpticalFlow_SINS.Speed[_PITCH];
@@ -1078,7 +1089,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[6]=NamelessQuad.Position[_YAW];//惯导高度
   DataBuf[7]=0;
 
-  /*
+  
   DataBuf[0]=PPM_Databuf[0];
   DataBuf[1]=PPM_Databuf[1];
   DataBuf[2]=PPM_Databuf[2];

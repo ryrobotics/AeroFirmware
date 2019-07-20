@@ -181,6 +181,9 @@ typedef struct
 	float baro_altitude_acc;
 	float acce_filter[3];
 	uint8_t imu_updtate_flag;
+  uint8_t baro_updtate_flag;
+	uint8_t us100_updtate_flag;
+	uint8_t tfmini_updtate_flag;
 }Sensor;
 
 #define vector3f Vector3f

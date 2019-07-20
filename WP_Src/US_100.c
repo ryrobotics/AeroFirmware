@@ -93,6 +93,7 @@ void US_100_Statemachine(void)
                                     COM7_Rx_Buf.Ring_Buff[2]);
         US_100_Update_Flag=1;
       }
+      	WP_Sensor.us100_updtate_flag=1;
     }
     Last_Start_Tail=Start_Tail;
 		US_Distance_Div=(US_Distance-Last_US_Distance)/0.1f;

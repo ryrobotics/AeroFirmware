@@ -2,6 +2,10 @@
 #ifndef __SINS_H_
 #define __SINS_H_
 
+#define US100  0
+#define TFMINI 1
+#define Ground_Distance_Sensor  TFMINI
+
 typedef struct{
    // by making alt 24 bit we can make p1 in a command 16 bit,
     // allowing an accurate angle in centi-degrees. This keeps the

@@ -50,9 +50,7 @@ extern flow_float opt_data;
 extern uint8_t OpticalFlow_Is_Work;
 extern Vector2f OpticalFlow_Speed,OpticalFlow_Speed_Err,OpticalFlow_Position;
 
-void Version_Declaration(void);
-void System_Start_Init(void);
-void Copyright_Show(void);
+
 
 #endif
 

@@ -477,6 +477,7 @@ uint8_t user_spl0601_get()//气压计数据获取状态机
     pressure = spl0601_get_pressure();
     spl06_cnt=0;
     baro_flag=1;
+    WP_Sensor.baro_updtate_flag=1;
 		return 1;
   }
   return 0;

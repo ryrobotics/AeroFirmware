@@ -392,8 +392,10 @@ void Main_Leading_Control(void)
 #if  (Optical_Enable==0)
       Total_Controller.Pitch_Angle_Control.Expect=Target_Angle[0];
       Total_Controller.Roll_Angle_Control.Expect=Target_Angle[1];
+      ncq_control_althold();//高度控制
 #else   //光流辅助悬停
-      if(Reserve_Mode==2&&Sensor_Flag.Hcsr04_Health==1&&OpticalFlow_Is_Work==1)//超声波有效且存在光流外设时，才允许进入光流模式  
+      if(Reserve_Mode==2&&OpticalFlow_Is_Work==1
+				&&(Sensor_Flag.Hcsr04_Health==1||tfdata.health==1))//超声波有效且存在光流外设时，才允许进入光流模式
       {  
 //        if(SDK_Take_Over_Ctrl==1)       
 //        {
@@ -415,9 +417,10 @@ void Main_Leading_Control(void)
       {
         Total_Controller.Pitch_Angle_Control.Expect=Target_Angle[0];
         Total_Controller.Roll_Angle_Control.Expect=Target_Angle[1];
+        ncq_control_althold();//高度控制
       }
 #endif
-      ncq_control_althold();//高度控制
+
     }
     
 //    else if(Controler_High_Mode==2//定高模式

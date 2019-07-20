@@ -722,6 +722,16 @@
               <FileType>1</FileType>
               <FilePath>.\WP_Src\QMC5883.c</FilePath>
             </File>
+            <File>
+              <FileName>tfmini.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\WP_Src\tfmini.c</FilePath>
+            </File>
+            <File>
+              <FileName>tfmini.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\WP_Src\tfmini.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -746,11 +756,6 @@
               <FileName>control_poshold.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\WP_Ctrl\control_poshold.c</FilePath>
-            </File>
-            <File>
-              <FileName>namelesscorun_opticalflow.o</FileName>
-              <FileType>3</FileType>
-              <FilePath>.\WP_Ctrl\namelesscorun_opticalflow.o</FilePath>
             </File>
             <File>
               <FileName>Earth_Declination.c</FileName>
@@ -786,6 +791,21 @@
               <FileName>Temperature_Ctrl.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\WP_Ctrl\Temperature_Ctrl.c</FilePath>
+            </File>
+            <File>
+              <FileName>CopyRight.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\WP_Ctrl\CopyRight.h</FilePath>
+            </File>
+            <File>
+              <FileName>copyright.o</FileName>
+              <FileType>3</FileType>
+              <FilePath>.\WP_Ctrl\copyright.o</FilePath>
+            </File>
+            <File>
+              <FileName>NamelessCorun_OpticalFlow.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\WP_Ctrl\NamelessCorun_OpticalFlow.c</FilePath>
             </File>
           </Files>
         </Group>

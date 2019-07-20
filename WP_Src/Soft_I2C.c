@@ -3,7 +3,7 @@
 #include "Soft_I2C.h"
 
 
-//#define USE_SOFT_I2C
+#define USE_SOFT_I2C
 
 #define SYSCTL_PERIPH_GPIO_I2C SYSCTL_PERIPH_GPIOB
 #define GPIO_STRENGTH_I2C GPIO_STRENGTH_4MA
