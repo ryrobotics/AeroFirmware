@@ -105,6 +105,10 @@ void NCQ_SDK_Reset(void);
 uint8_t move_with_speed_target(float x_target,float y_target,float delta,SDK_Status *Status,uint16_t number);
 uint8_t move_with_xy_target(float pos_x_target,float pos_y_target,SDK_Status *Status,uint16_t number);
 uint8_t move_with_z_target(float z_target,float z_vel,float delta,SDK_Status *Status,uint16_t number);
+uint8_t move_with_openmv(float pos_x_target,float pos_y_target,SDK_Status *Status,uint16_t number);
+uint8_t move_with_openmv_speed(float x_target,float y_target,float delta,SDK_Status *Status,uint16_t number);
+uint8_t move_with_openmv_time(uint8_t SDK_Mode_Set,float delta,SDK_Status *Status,uint16_t number);
+
 void NCQ_SDK_Run(void);
 uint8_t NCQ_SDK_Circle(void);
 void SDK_DT_Send_Check(unsigned char mode);
