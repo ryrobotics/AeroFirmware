@@ -1,4 +1,36 @@
-
+/* Copyright (c)  2018-2025 Wuhan Nameless Innovation Technology Co.,Ltd. All rights reserved.*/
+/*----------------------------------------------------------------------------------------------------------------------/
+*               本程序只供购买者学习使用，版权著作权属于无名科创团队，无名科创团队将飞控程序源码提供给购买者，
+*               购买者要为无名科创团队提供保护，未经作者许可，不得将源代码提供给他人，不得将源代码放到网上供他人免费下载， 
+*               更不能以此销售牟利，如发现上述行为，无名科创团队将诉之以法律解决！！！
+-----------------------------------------------------------------------------------------------------------------------/
+*               生命不息、奋斗不止；前人栽树，后人乘凉！！！
+*               开源不易，且学且珍惜，祝早日逆袭、进阶成功！！！
+*               学习优秀者，简历可推荐到DJI、ZEROTECH、XAG、AEE、GDU、AUTEL、EWATT、HIGH GREAT等公司就业
+*               求职简历请发送：15671678205@163.com，需备注求职意向单位、岗位、待遇等
+*               无名科创开源飞控QQ群：540707961
+*               CSDN博客：http://blog.csdn.net/u011992534
+*               优酷ID：NamelessCotrun无名小哥
+*               B站教学视频：https://space.bilibili.com/67803559/#/video
+*               客户使用心得、改进意见征集贴：http://www.openedv.com/forum.php?mod=viewthread&tid=234214&extra=page=1
+*               淘宝店铺：https://shop348646912.taobao.com/?spm=2013.1.1000126.2.5ce78a88ht1sO2
+*               百度贴吧:无名科创开源飞控
+*               公司官网:www.nameless.tech
+*               修改日期:2019/4/12
+*               版本：躺赢者——CarryPilot_V1.0
+*               版权所有，盗版必究。
+*               Copyright(C) 2017-2025 武汉无名创新科技有限公司 
+*               All rights reserved
+*               重要提示：
+*               正常淘宝咸鱼转手的飞控、赠送朋友、传给学弟的都可以进售后群学习交流，
+*               不得直接在网上销售无名创新资料，无名创新代码有声明版权，他人不得将
+*               资料代码传网上供他人下载，不得以谋利为目的销售资料代码，发现有此操
+*               作者，公司会提前告知，请1天内及时处理，否则你的学校、单位、姓名、电
+*               话、地址信息会被贴出在公司官网、官方微信公众平台、官方技术博客、知乎
+*               专栏以及淘宝店铺首页予以公示公告，此种所作所为，会成为个人污点，影响
+*               升学、找工作、社会声誉、很快就很在无人机界出名，后果很严重。
+*               因此行为给公司造成重大损失者，会以法律途径解决，感谢您的合作，谢谢！！！
+----------------------------------------------------------------------------------------------------------------------*/
 #include "Headfile.h"
 #include "uart.h"
 #include "Usart.h"
@@ -346,7 +378,7 @@ void UART7_IRQHandler(void)//UART2中断函数
   while(UARTCharsAvail(UART7_BASE))//判断FIFO是否还有数据			
   {			
     //输出得到的数据			
-        //UARTCharPut(UART1_BASE,UARTCharGet(UART1_BASE));36
+    //UARTCharPut(UART1_BASE,UARTCharGet(UART1_BASE));36
     //RingBuf_Write(UARTCharGet(UART7_BASE),&COM7_Rx_Buf,4);//往环形队列里面写数据
 #if (Ground_Distance_Sensor==US100)	
 		RingBuf_Write(UARTCharGet(UART7_BASE),&COM7_Rx_Buf,4);//往环形队列里面写数据
@@ -1010,7 +1042,7 @@ void ANO_SEND_StateMachine(void)//各组数据循环发送
 void Vcan_Send(void)//山外地面站发送
 {
   static float DataBuf[8];	
-
+/*
 	DataBuf[0]=Pitch;//惯导高度
   DataBuf[1]=Roll;//惯导速度
   DataBuf[2]=Yaw;;//惯导加速度
@@ -1019,7 +1051,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=Yaw_Observation;
   DataBuf[6]=0;
   DataBuf[7]=0;
-/*
+*/
   DataBuf[0]=NamelessQuad.Position[_YAW];//惯导高度
   DataBuf[1]=NamelessQuad.Speed[_YAW];//惯导速度
   DataBuf[2]=observation_div;//NamelessQuad.Acceleration[_YAW];;//惯导加速度
@@ -1030,22 +1062,14 @@ void Vcan_Send(void)//山外地面站发送
 	DataBuf[7]=NamelessQuad.Acceleration[_YAW];
 	
 
-	DataBuf[0]=Accel_X_Butter_Filter.output[Accel_X_Butter_Filter.N-1];;
-  DataBuf[1]=Accel_Y_Butter_Filter.output[Accel_Y_Butter_Filter.N-1];;
-  DataBuf[2]=Accel_Z_Butter_Filter.output[Accel_Z_Butter_Filter.N-1];;
-  DataBuf[3]=accel.x;
-	DataBuf[4]=accel.y;
-  DataBuf[5]=accel.z;
+//	DataBuf[0]=Accel_X_Butter_Filter.output[Accel_X_Butter_Filter.N-1];;
+//  DataBuf[1]=Accel_Y_Butter_Filter.output[Accel_Y_Butter_Filter.N-1];;
+//  DataBuf[2]=Accel_Z_Butter_Filter.output[Accel_Z_Butter_Filter.N-1];;
+//  DataBuf[3]=accel.x;
+//	DataBuf[4]=accel.y;
+//  DataBuf[5]=accel.z;
 	
-	//PID期望反馈
-  DataBuf[0]=Total_Controller.Pitch_Angle_Control.Expect;
-  DataBuf[1]=Total_Controller.Pitch_Gyro_Control.Expect;
-  DataBuf[2]=Total_Controller.Pitch_Angle_Control.FeedBack;
-  DataBuf[3]=Total_Controller.Pitch_Gyro_Control.FeedBack;
-  DataBuf[4]=Total_Controller.Roll_Angle_Control.Expect;
-  DataBuf[5]=Total_Controller.Roll_Gyro_Control.Expect;
-  DataBuf[6]=Total_Controller.Roll_Angle_Control.FeedBack;
-  DataBuf[7]=Total_Controller.Roll_Gyro_Control.FeedBack;
+	/*
   
   DataBuf[0]=GPS_Vel_Div.E;//惯导高度
   DataBuf[1]=GPS_Vel_Div.N;//惯导速度
@@ -1065,9 +1089,8 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[4]=gyro_filter_data.y;
   DataBuf[5]=opt_gyro_data.y;
   DataBuf[6]=opt_origin_data.pixel_flow_y_integral;
-  DataBuf[7]=opt_filter_data.y;
+  DataBuf[7]=opt_filter_data.y;   
   
-
   DataBuf[0]=gyro_filter_data.x;//Pitch X
   DataBuf[1]=gyro_filter_data.y;//Roll R
   DataBuf[2]=opt_gyro_data.x;
@@ -1077,15 +1100,6 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[6]=opt_gyro_filter_data.x;
   DataBuf[7]=opt_gyro_filter_data.y;
   
-  DataBuf[0]=OpticalFlow_SINS.Position[_PITCH];
-  DataBuf[1]=OpticalFlow_SINS.Speed[_PITCH];
-  DataBuf[2]=OpticalFlow_SINS.Position[_ROLL];
-  DataBuf[3]=OpticalFlow_SINS.Speed[_ROLL];
-  DataBuf[4]=OpticalFlow_Position.x;
-  DataBuf[5]=OpticalFlow_Position.y;
-  DataBuf[6]=NamelessQuad.Position[_YAW];//惯导高度
-  DataBuf[7]=0;
-
   
   DataBuf[0]=PPM_Databuf[0];
   DataBuf[1]=PPM_Databuf[1];

@@ -39,8 +39,6 @@
 #define  Yaw_Max     200          //最大偏航期望
 #define  Buttom_Safe_Deadband  50 //油门底部安全死区
 
-#define Lock 0
-#define UnLock 1
 
 #define Lock_Controler  0
 #define Unlock_Controler  1

@@ -758,9 +758,24 @@
               <FilePath>.\WP_Ctrl\control_poshold.c</FilePath>
             </File>
             <File>
+              <FileName>WP_Ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\WP_Ctrl\WP_Ctrl.c</FilePath>
+            </File>
+            <File>
               <FileName>Earth_Declination.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\WP_Ctrl\Earth_Declination.c</FilePath>
+            </File>
+            <File>
+              <FileName>copyright.o</FileName>
+              <FileType>3</FileType>
+              <FilePath>.\WP_Ctrl\copyright.o</FilePath>
+            </File>
+            <File>
+              <FileName>NamelessCorun_OpticalFlow.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\WP_Ctrl\NamelessCorun_OpticalFlow.c</FilePath>
             </File>
             <File>
               <FileName>NamelessCotrun_SDK.c</FileName>
@@ -778,11 +793,6 @@
               <FilePath>.\WP_Ctrl\Sensor.c</FilePath>
             </File>
             <File>
-              <FileName>WP_Ctrl.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\WP_Ctrl\WP_Ctrl.c</FilePath>
-            </File>
-            <File>
               <FileName>Compass.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\WP_Ctrl\Compass.c</FilePath>
@@ -791,21 +801,6 @@
               <FileName>Temperature_Ctrl.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\WP_Ctrl\Temperature_Ctrl.c</FilePath>
-            </File>
-            <File>
-              <FileName>CopyRight.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\WP_Ctrl\CopyRight.h</FilePath>
-            </File>
-            <File>
-              <FileName>copyright.o</FileName>
-              <FileType>3</FileType>
-              <FilePath>.\WP_Ctrl\copyright.o</FilePath>
-            </File>
-            <File>
-              <FileName>NamelessCorun_OpticalFlow.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\WP_Ctrl\NamelessCorun_OpticalFlow.c</FilePath>
             </File>
           </Files>
         </Group>
