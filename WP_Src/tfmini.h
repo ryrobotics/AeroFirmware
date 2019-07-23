@@ -6,12 +6,12 @@
 
 typedef struct
 {
-  uint16_t distance;
-	uint16_t strength;
-	uint16_t temperature;
+  float distance;
+	float strength;
+	float temperature;
   uint8_t mode;
-	uint16_t last_distance;
-	uint16_t last_strength;
+	float last_distance;
+	float last_strength;
 	float div;
 	float acc;
 	float last_div;
@@ -19,8 +19,10 @@ typedef struct
 }tfmini;
 
 extern tfmini tfdata; 
+extern uint8_t Ground_Sensor_Now_Mode;
+extern float ground_sensor_default;
 void TFmini_Statemachine(void);
-
+void Ground_Sensor_Statemachine(void);
 
 
 

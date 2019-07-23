@@ -1,4 +1,36 @@
-
+/* Copyright (c)  2018-2025 Wuhan Nameless Innovation Technology Co.,Ltd. All rights reserved.*/
+/*----------------------------------------------------------------------------------------------------------------------/
+*               本程序只供购买者学习使用，版权著作权属于无名科创团队，无名科创团队将飞控程序源码提供给购买者，
+*               购买者要为无名科创团队提供保护，未经作者许可，不得将源代码提供给他人，不得将源代码放到网上供他人免费下载， 
+*               更不能以此销售牟利，如发现上述行为，无名科创团队将诉之以法律解决！！！
+-----------------------------------------------------------------------------------------------------------------------/
+*               生命不息、奋斗不止；前人栽树，后人乘凉！！！
+*               开源不易，且学且珍惜，祝早日逆袭、进阶成功！！！
+*               学习优秀者，简历可推荐到DJI、ZEROTECH、XAG、AEE、GDU、AUTEL、EWATT、HIGH GREAT等公司就业
+*               求职简历请发送：15671678205@163.com，需备注求职意向单位、岗位、待遇等
+*               无名科创开源飞控QQ群：540707961
+*               CSDN博客：http://blog.csdn.net/u011992534
+*               优酷ID：NamelessCotrun无名小哥
+*               B站教学视频：https://space.bilibili.com/67803559/#/video
+*               客户使用心得、改进意见征集贴：http://www.openedv.com/forum.php?mod=viewthread&tid=234214&extra=page=1
+*               淘宝店铺：https://shop348646912.taobao.com/?spm=2013.1.1000126.2.5ce78a88ht1sO2
+*               百度贴吧:无名科创开源飞控
+*               公司官网:www.nameless.tech
+*               修改日期:2019/4/12
+*               版本：躺赢者——CarryPilot_V1.0
+*               版权所有，盗版必究。
+*               Copyright(C) 2017-2025 武汉无名创新科技有限公司 
+*               All rights reserved
+*               重要提示：
+*               正常淘宝咸鱼转手的飞控、赠送朋友、传给学弟的都可以进售后群学习交流，
+*               不得直接在网上销售无名创新资料，无名创新代码有声明版权，他人不得将
+*               资料代码传网上供他人下载，不得以谋利为目的销售资料代码，发现有此操
+*               作者，公司会提前告知，请1天内及时处理，否则你的学校、单位、姓名、电
+*               话、地址信息会被贴出在公司官网、官方微信公众平台、官方技术博客、知乎
+*               专栏以及淘宝店铺首页予以公示公告，此种所作所为，会成为个人污点，影响
+*               升学、找工作、社会声誉、很快就很在无人机界出名，后果很严重。
+*               因此行为给公司造成重大损失者，会以法律途径解决，感谢您的合作，谢谢！！！
+----------------------------------------------------------------------------------------------------------------------*/
 #include "Headfile.h"
 #include "Key.h"
 /***********************************************************
@@ -50,7 +82,7 @@ bool Key_Scan(uint8_t release)
     {
       while(QuadKey1==0);//等待按键释放
       Page_Number++;
-      if(Page_Number>13) Page_Number=0;
+      if(Page_Number>14) Page_Number=0;
       LCD_CLS();
     }
   }
@@ -62,7 +94,7 @@ bool Key_Scan(uint8_t release)
     {
       while(QuadKey2==0);//等待按键释放
       Page_Number--;
-      if(Page_Number<0) Page_Number=13;
+      if(Page_Number<0) Page_Number=14;
       LCD_CLS();
     }
   }
@@ -90,12 +122,11 @@ void QuadShow()
     LCD_clear_L(0,2);  LCD_P6x8Str(0,2,"Pitch:");          write_6_8_number(40,2,Pitch);                                    write_6_8_number(90,2,Pitch_Gyro);
     LCD_clear_L(0,3);  LCD_P6x8Str(0,3,"Roll:");           write_6_8_number(40,3,Roll);                            					write_6_8_number(90,3,Roll_Gyro);
     LCD_clear_L(0,4);  LCD_P6x8Str(0,4,"Baro:");           write_6_8_number(40,4,(uint32_t)(WP_Sensor.baro_pressure_raw));  write_6_8_number(90,4,WP_Sensor.baro_altitude);
-    LCD_clear_L(0,5);  LCD_P6x8Str(0,5,"TFmini:");          write_6_8_number(40,5,tfdata.distance);               			          write_6_8_number(90,5,NamelessQuad.Position[_YAW]);
-    LCD_clear_L(0,6);  LCD_P6x8Str(0,6,"SINS:");           write_6_8_number(40,6,Origion_NamelessQuad.Acceleration[_YAW]);  write_6_8_number(90,6,NamelessQuad.Speed[_YAW]);//write_6_8_number(40,6,GPS_Sate_Num); 
-    LCD_clear_L(0,7);  LCD_P6x8Str(0,7,"GyTmp:");           write_6_8_number(40,7,Gyro_Safety_Calibration_Flag);             write_6_8_number(90,7,WP_Sensor.temperature);         		
-                                                           //write_6_8_number(80,7,Origion_NamelessQuad.Acceleration[_YAW]);  write_6_8_number(15,7,GPS_Quality);
-		
-		//write_6_8_number(0,7,Motor_PWM_1);          write_6_8_number(30,7,Motor_PWM_2);    write_6_8_number(60,7,Motor_PWM_3);   write_6_8_number(90,7,Motor_PWM_4);
+    LCD_clear_L(0,5);  LCD_P6x8Str(0,5,"HC04:");           write_6_8_number(40,5,US_Distance);               			          write_6_8_number(80,5,NamelessQuad.Position[_YAW]);
+    LCD_clear_L(0,6);  LCD_P6x8Str(0,6,"Sate_N:");         write_6_8_number(40,6,GPS_Sate_Num);                    					write_6_8_number(80,6,NamelessQuad.Speed[_YAW]);
+    LCD_clear_L(0,7);  write_6_8_number(0,7,tfdata.distance);
+		                                                       write_6_8_number(20,7,Gyro_Safety_Calibration_Flag);  
+		write_6_8_number(30,7,WP_Sensor.temperature);          write_6_8_number(75,7,Origion_NamelessQuad.Acceleration[_YAW]);
 		
   }
   else  if(Page_Number==1)
@@ -216,25 +247,13 @@ void QuadShow()
     //y=32+32*constrain_float(SDK_Target.y,-100,100)/100;
     //x=64-32*constrain_float(SDK_Target.x,-100,100)/100; 
     //ssd1306_fill_circle(x,y,20*constrain_float(SDK_Point.Pixel,200*SDK_Point.flag,1000)/1000,WHITE);
-
-      ssd1306_display();
-      LCD_P6x8Str(0,0,"point_x:");  write_6_8_number(95,0,SDK_Point.x);
-      LCD_P6x8Str(0,1,"point_y::"); write_6_8_number(95,1,SDK_Point.y);
-      LCD_P6x8Str(0,2,"point_s:");  write_6_8_number(95,2,SDK_Point.Pixel);
-      LCD_P6x8Str(0,3,"point_f:");  write_6_8_number(95,3,SDK_Point.flag);
-      LCD_P6x8Str(0,4,"Tar_x:");    write_6_8_number(95,4,SDK_Target.x);
-      LCD_P6x8Str(0,5,"Tar_y:");    write_6_8_number(95,5,SDK_Target.y);  
-    
-//    else if(SDK_Point.flag==2)
-//    {
-//      ssd1306_display();
-//      LCD_P6x8Str(0,0,"RecCt_x:");  write_6_8_number(95,0,SDK_Point.x);
-//      LCD_P6x8Str(0,1,"RecCt_y::"); write_6_8_number(95,1,SDK_Point.y);
-//      LCD_P6x8Str(0,2,"Rec_Len:");  write_6_8_number(95,2,SDK_Point.Pixel);
-//      LCD_P6x8Str(0,3,"RecFlag:");  write_6_8_number(95,3,SDK_Point.flag);
-//      LCD_P6x8Str(0,4,"Tar_x:");    write_6_8_number(95,4,SDK_Target.x);
-//      LCD_P6x8Str(0,5,"Tar_y:");    write_6_8_number(95,5,SDK_Target.y);  
-//    }
+    ssd1306_display();
+    LCD_P6x8Str(0,0,"point_x:");  write_6_8_number(95,0,SDK_Point.x);
+    LCD_P6x8Str(0,1,"point_y::"); write_6_8_number(95,1,SDK_Point.y);
+    LCD_P6x8Str(0,2,"point_s:");  write_6_8_number(95,2,SDK_Point.Pixel);
+    LCD_P6x8Str(0,3,"point_f:");  write_6_8_number(95,3,SDK_Point.flag);
+    LCD_P6x8Str(0,4,"Tar_x:");    write_6_8_number(95,4,SDK_Target.x);
+    LCD_P6x8Str(0,5,"Tar_y:");    write_6_8_number(95,5,SDK_Target.y);  
   }
   else if(Page_Number==8)
   {
@@ -271,8 +290,8 @@ void QuadShow()
     
     LCD_clear_L(0,6); LCD_clear_L(0,7); 
     if(SDK_Now_Mode==0x01)         LCD_P8x16Str(32,6,"Point Mode");
-    else if(SDK_Now_Mode==0x02)    LCD_P8x16Str(32,6,"Line Mode");
-    else if(SDK_Now_Mode==0x03)    LCD_P8x16Str(32,6,"Rec Mode");
+    else if(SDK_Now_Mode==0x02)      LCD_P8x16Str(32,6,"Line Mode");
+    
     if(Pitch_Control>=Scale_Pecent_Max*Pit_Rol_Max)
     {
       delay_ms(10);
@@ -375,25 +394,75 @@ void QuadShow()
   {
     LCD_clear_L(0,0);
     LCD_P6x8Str(10,0,"Sensor Data");   write_6_8_number(100,0,Page_Number+1);
-    LCD_clear_L(0,1);
-    LCD_P6x8Str(0,1,"MAG  +  MPU  +  BARO");
-    LCD_clear_L(0,2);
-    write_6_8_number(0,2,WP_Sensor.mag_raw.x);
-    write_6_8_number(40,2,WP_Sensor.mag_raw.y);
-    write_6_8_number(70,2,WP_Sensor.mag_raw.z);
-    LCD_clear_L(0,3);
-    write_6_8_number(0,3,WP_Sensor.accel_raw.x);
-    write_6_8_number(40,3,WP_Sensor.accel_raw.y);
-    write_6_8_number(70,3,WP_Sensor.accel_raw.z);
-    LCD_clear_L(0,4);
-    write_6_8_number(0,4,WP_Sensor.gyro_raw.x);
-    write_6_8_number(40,4,WP_Sensor.gyro_raw.y);
-    write_6_8_number(80,4,WP_Sensor.gyro_raw.z);
-    LCD_clear_L(0,5);
-    write_6_8_number(0,5,WP_Sensor.baro_pressure_raw);
-    write_6_8_number(70,5,WP_Sensor.baro_temp_raw);
+    LCD_clear_L(0,2);LCD_P6x8Str(0,2,"mag:");
+    write_6_8_number(30,2,WP_Sensor.mag_raw.x);
+    write_6_8_number(65,2,WP_Sensor.mag_raw.y);
+    write_6_8_number(100,2,WP_Sensor.mag_raw.z);
+    LCD_clear_L(0,3);LCD_P6x8Str(0,3,"acc:");
+    write_6_8_number(30,3,WP_Sensor.accel_raw.x);
+    write_6_8_number(65,3,WP_Sensor.accel_raw.y);
+    write_6_8_number(100,3,WP_Sensor.accel_raw.z);
+    LCD_clear_L(0,4);LCD_P6x8Str(0,4,"gyr:");
+    write_6_8_number(30,4,WP_Sensor.gyro_raw.x);
+    write_6_8_number(65,4,WP_Sensor.gyro_raw.y);
+    write_6_8_number(100,4,WP_Sensor.gyro_raw.z);
+    LCD_clear_L(0,5);LCD_P6x8Str(0,5,"bar:");
+    write_6_8_number(30,5,WP_Sensor.baro_pressure_raw);
+    write_6_8_number(65,5,WP_Sensor.baro_temp_raw);
+		LCD_clear_L(0,6);LCD_P6x8Str(0,6,"opt:");
+		write_6_8_number(30,6,opt_origin_data.pixel_flow_x_integral);
+		write_6_8_number(65,6,opt_origin_data.pixel_flow_y_integral);
+		LCD_clear_L(0,7);LCD_P6x8Str(0,7,"tfm:");
+		write_6_8_number(30,7,tfdata.distance);
+		write_6_8_number(65,7,tfdata.strength);
+		write_6_8_number(100,7,tfdata.temperature);
   }
-  else if(Page_Number==13)
+	else if(Page_Number==13)
+  {
+    LCD_clear_L(0,0); LCD_clear_L(0,1);  
+    LCD_P8x16Str(5,0,"Ground_Sensor");write_6_8_number(110,1,Ground_Sensor_Now_Mode);
+    
+    LCD_clear_L(0,2); LCD_clear_L(0,3);
+		LCD_P8x16Str(5,2,"Now_Mode");
+		
+    LCD_clear_L(0,4); LCD_clear_L(0,5);  
+    if(Ground_Sensor_Now_Mode==0x01)         	 LCD_P8x16Str(5,4,"US100 Mode");
+    else if(Ground_Sensor_Now_Mode==0x02)      LCD_P8x16Str(5,4,"tfmini Mode");
+    
+    LCD_clear_L(0,6); LCD_clear_L(0,7); 
+    if(Pitch_Control>=Scale_Pecent_Max*Pit_Rol_Max)
+    {
+      delay_ms(10);
+      if(Pitch_Control>=Scale_Pecent_Max*Pit_Rol_Max)
+      {
+        while(Pitch_Control>=Scale_Pecent_Max*Pit_Rol_Max);
+        Ground_Sensor_Now_Mode++;
+        if(Ground_Sensor_Now_Mode>2) Ground_Sensor_Now_Mode=1;
+        WriteFlashParameter(GROUND_DISTANCE_DEFAULT,
+                            Ground_Sensor_Now_Mode,
+                            &Table_Parameter);
+				ConfigureUART7();
+      }
+    }
+    
+    if(Pitch_Control<=-Scale_Pecent_Max*Pit_Rol_Max)
+    {
+      delay_ms(10);
+      if(Pitch_Control<=-Scale_Pecent_Max*Pit_Rol_Max)
+      {
+        while(Pitch_Control<=-Scale_Pecent_Max*Pit_Rol_Max);
+        Ground_Sensor_Now_Mode--;
+        if(Ground_Sensor_Now_Mode<1) Ground_Sensor_Now_Mode=2;
+        WriteFlashParameter(GROUND_DISTANCE_DEFAULT,
+                            Ground_Sensor_Now_Mode,
+                            &Table_Parameter);
+				ConfigureUART7();
+      }
+    } 
+		LCD_clear_L(0,6);LCD_P6x8Str(0,6,"tfmini:");  							LCD_P6x8Str(75,6,"us100:");
+		LCD_clear_L(0,7);write_6_8_number(0,7,tfdata.distance);     write_6_8_number(75,7,US_Distance);
+  }
+  else if(Page_Number==14)
   {
     LCD_clear_L(0,0);  LCD_P6x8Str(0,0,"ch1:");write_6_8_number(25,0,PPM_Databuf[0]);write_6_8_number(55,0,RC_Calibration[0].max);write_6_8_number(90,0,RC_Calibration[0].min);
     LCD_clear_L(0,1);  LCD_P6x8Str(0,1,"ch2:");write_6_8_number(25,1,PPM_Databuf[1]);write_6_8_number(55,1,RC_Calibration[1].max);write_6_8_number(90,1,RC_Calibration[1].min);
@@ -404,14 +473,14 @@ void QuadShow()
     LCD_clear_L(0,6);  LCD_P6x8Str(0,6,"ch7:");write_6_8_number(25,6,PPM_Databuf[6]);write_6_8_number(55,6,RC_Calibration[6].max);write_6_8_number(90,6,RC_Calibration[6].min);
     LCD_clear_L(0,7);  LCD_P6x8Str(0,7,"ch8:");write_6_8_number(25,7,PPM_Databuf[7]);write_6_8_number(55,7,RC_Calibration[7].max);write_6_8_number(90,7,RC_Calibration[7].min);
   }
-  else if(Page_Number==14)
+  else if(Page_Number==15)
   {
     LCD_clear_L(0,0);LCD_clear_L(0,1);LCD_P8x16Str(0,0,"Please Move Thr");
     LCD_clear_L(0,2);LCD_clear_L(0,3);LCD_P8x16Str(0,2,"Up And Pull Out");
     LCD_clear_L(0,4);LCD_clear_L(0,5);LCD_P8x16Str(0,4,"The Power Supply");
     LCD_clear_L(0,6);LCD_clear_L(0,7);LCD_P8x16Str(0,6,"ESC Calibration");
   }
-	else if(Page_Number==15)
+	else if(Page_Number==16)
   {
     Copyright_Show();
   }

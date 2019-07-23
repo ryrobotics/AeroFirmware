@@ -1,4 +1,36 @@
-
+/* Copyright (c)  2018-2025 Wuhan Nameless Innovation Technology Co.,Ltd. All rights reserved.*/
+/*----------------------------------------------------------------------------------------------------------------------/
+*               本程序只供购买者学习使用，版权著作权属于无名科创团队，无名科创团队将飞控程序源码提供给购买者，
+*               购买者要为无名科创团队提供保护，未经作者许可，不得将源代码提供给他人，不得将源代码放到网上供他人免费下载， 
+*               更不能以此销售牟利，如发现上述行为，无名科创团队将诉之以法律解决！！！
+-----------------------------------------------------------------------------------------------------------------------/
+*               生命不息、奋斗不止；前人栽树，后人乘凉！！！
+*               开源不易，且学且珍惜，祝早日逆袭、进阶成功！！！
+*               学习优秀者，简历可推荐到DJI、ZEROTECH、XAG、AEE、GDU、AUTEL、EWATT、HIGH GREAT等公司就业
+*               求职简历请发送：15671678205@163.com，需备注求职意向单位、岗位、待遇等
+*               无名科创开源飞控QQ群：540707961
+*               CSDN博客：http://blog.csdn.net/u011992534
+*               优酷ID：NamelessCotrun无名小哥
+*               B站教学视频：https://space.bilibili.com/67803559/#/video
+*               客户使用心得、改进意见征集贴：http://www.openedv.com/forum.php?mod=viewthread&tid=234214&extra=page=1
+*               淘宝店铺：https://shop348646912.taobao.com/?spm=2013.1.1000126.2.5ce78a88ht1sO2
+*               百度贴吧:无名科创开源飞控
+*               公司官网:www.nameless.tech
+*               修改日期:2019/4/12
+*               版本：躺赢者——CarryPilot_V1.0
+*               版权所有，盗版必究。
+*               Copyright(C) 2017-2025 武汉无名创新科技有限公司 
+*               All rights reserved
+*               重要提示：
+*               正常淘宝咸鱼转手的飞控、赠送朋友、传给学弟的都可以进售后群学习交流，
+*               不得直接在网上销售无名创新资料，无名创新代码有声明版权，他人不得将
+*               资料代码传网上供他人下载，不得以谋利为目的销售资料代码，发现有此操
+*               作者，公司会提前告知，请1天内及时处理，否则你的学校、单位、姓名、电
+*               话、地址信息会被贴出在公司官网、官方微信公众平台、官方技术博客、知乎
+*               专栏以及淘宝店铺首页予以公示公告，此种所作所为，会成为个人污点，影响
+*               升学、找工作、社会声誉、很快就很在无人机界出名，后果很严重。
+*               因此行为给公司造成重大损失者，会以法律途径解决，感谢您的合作，谢谢！！！
+----------------------------------------------------------------------------------------------------------------------*/
 #include "Headfile.h"
 #include "WP_Ctrl.h"
 #include "control_config.h"
@@ -32,8 +64,8 @@ void Controler_Mode_Select()
   if(PPM_Databuf[4]>=(RC_Calibration[4].max-RC_Calibration[4].deadband))       Controler_High_Mode=2;//气压计、超神波定高
   else if(PPM_Databuf[4]<=(RC_Calibration[4].min+RC_Calibration[4].deadband))  Controler_High_Mode=1;//纯姿态自稳
   
-  //if(PPM_Databuf[5]>=(RC_Calibration[5].max-RC_Calibration[5].deadband))         Controler_Horizontal_Mode=2;//水平位置控制
-  //else if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))   Controler_Horizontal_Mode=1;//姿态自稳控制
+  if(PPM_Databuf[5]>=(RC_Calibration[5].max-RC_Calibration[5].deadband))         Controler_Horizontal_Mode=2;//水平位置控制
+  else if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))   Controler_Horizontal_Mode=1;//姿态自稳控制
   
   if(PPM_Databuf[6]>=(RC_Calibration[6].max-RC_Calibration[6].deadband))            {Controler_Land_Mode=2;}//返航模式}
   else if(PPM_Databuf[6]<=(RC_Calibration[6].middle+RC_Calibration[6].deadband))   {Controler_Land_Mode=1;}//非返航模式
@@ -58,11 +90,6 @@ void Controler_Mode_Select()
     OpticalFlow_Ctrl_Reset();
   }
   
-  if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))
-  {
-    OpticalFlow_SINS_Reset();
-    OpticalFlow_Ctrl_Reset();
-  }
   
   if(Reserve_Mode_Cnt>=1) Reserve_Mode_Cnt--;
   if(Reserve_Mode_Cnt==0) Reserve_Mode_Fast_Exchange_Cnt=0; 
@@ -113,7 +140,7 @@ void Controler_Mode_Select()
   if(Unwanted_Lock_Flag==1)//定高模式解锁后，无任何操作
   {
     Thr_Push_Over_State=Thr_Push_Over_Deadband();
-    if(Thr_Push_Over_State==2)//只要向上推过了中位死区，即不允许自动上锁操作
+    if(Thr_Push_Over_State==2)//只要向上推过了中位死区，即把允许自动上锁操作
     {
       Unwanted_Lock_Flag=0;
     }
@@ -137,11 +164,11 @@ void Controler_Mode_Select()
     if(Controler_High_Mode==1)  {Control_Mode_Change=1;}//定高切自稳
   }
   
-//  if(Controler_Horizontal_Mode!=Last_Controler_Horizontal_Mode)//位置通道有切换
-//  {
-//    if(Controler_Horizontal_Mode==2)  {Control_Mode_Change=2;Pos_Hold_SetFlag=0;}//自稳切定点，设置悬停点
-//    if(Controler_Horizontal_Mode==1)  {Control_Mode_Change=2;Pos_Hold_SetFlag=1;}//定点时自稳
-//  }
+  if(Controler_Horizontal_Mode!=Last_Controler_Horizontal_Mode)//位置通道有切换
+  {
+    if(Controler_Horizontal_Mode==2)  {Control_Mode_Change=2;Pos_Hold_SetFlag=0;}//自稳切定点，设置悬停点
+    if(Controler_Horizontal_Mode==1)  {Control_Mode_Change=2;Pos_Hold_SetFlag=1;}//定点时自稳
+  }
   
   
   if(Control_Mode_Change==1)//存在定高模式切换，高度只设置一次
@@ -158,63 +185,62 @@ void Controler_Mode_Select()
     }
     Control_Mode_Change=0;//将模式切换位置0,有且仅处理一次
   }
-//  else if(Control_Mode_Change==2)//存在定点模式切换，悬停位置只设置一次
-//  {
-//    if(Controler_Horizontal_Mode==Pos_Hold_Mode)//本次为定点模式
-//    {
-//      if(Pos_Hold_SetFlag==0&&(GPS_ok()==TRUE))//满足设置悬停点条件
-//      {
-//        /*******************将当前惯导水平位置估计作为目标悬停点************************/
-//        Total_Controller.Latitude_Position_Control.Expect=NamelessQuad.Position[_ROLL];
-//        Total_Controller.Longitude_Position_Control.Expect=NamelessQuad.Position[_PITCH];
-//        PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
-//        PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
-//        PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
-//        PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
-//        Pos_Hold_SetFlag=1;
-//      }
-//    }
-//    else//定点切自稳
-//    {
-//      PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
-//      PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
-//      PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
-//      PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
-//    }
-//    Control_Mode_Change=0;//已响应本次定点档位切换
-//  }
+  else if(Control_Mode_Change==2)//存在定点模式切换，悬停位置只设置一次
+  {
+    if(Controler_Horizontal_Mode==Pos_Hold_Mode)//本次为定点模式
+    {
+      if(Pos_Hold_SetFlag==0&&(GPS_ok()==TRUE))//满足设置悬停点条件
+      {
+        /*******************将当前惯导水平位置估计作为目标悬停点************************/
+        Total_Controller.Latitude_Position_Control.Expect=NamelessQuad.Position[_ROLL];
+        Total_Controller.Longitude_Position_Control.Expect=NamelessQuad.Position[_PITCH];
+        PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
+        PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
+        PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
+        PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
+        Pos_Hold_SetFlag=1;
+      }
+    }
+    else//定点切自稳
+    {
+      PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
+      PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
+      PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
+      PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
+    }
+    Control_Mode_Change=0;//已响应本次定点档位切换
+  }
   
   /******当前档位为定点模式，但显示悬停点未设置，说明之前未满足设置定点条件有三种情况********
   1、初始通过开关切定点模式时，GPS状态未满足悬停条件；
   2、初始通过开关切定点模式时，GPS状态未满足悬停条件，之后持续检测仍然未满足GPS定点条件；
   3、之前GPS状态满足悬停条件，但由于GPS信号质量变差，自动切换至不满足GPS定点条件；
   *******重新判断当下是否满足定点条件，如满足条件更新悬停点，允许进入定点模式******/
-  
-//  if(Controler_Horizontal_Mode==2)
-//  {
-//    if(GPS_ok()==TRUE)//首次切定点不满足定点条件，之后又满足定点条件
-//    {
-//      if(Pos_Hold_SetFlag==0)//满足定点条件后，有且仅设置一次
-//      {
-//        /*******************将当前惯导水平位置估计作为目标悬停点************************/
-//        Total_Controller.Latitude_Position_Control.Expect=NamelessQuad.Position[_ROLL];
-//        Total_Controller.Longitude_Position_Control.Expect=NamelessQuad.Position[_PITCH];
-//        PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
-//        PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
-//        PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
-//        PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
-//        Pos_Hold_SetFlag=1;
-//      }
-//    }
-//    else//定点档位处于定点模式，但未满足定点条件，将Pos_Hold_SetFlag置0，等待满足时再设置悬停点
-//    {
-//      Pos_Hold_SetFlag=0;//不满足定点条件时，复位位置锁定标志位，等待满足定点条件时，再次锁定
-//      PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
-//      PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
-//      PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
-//      PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
-//    }
-//  }
+  if(Controler_Horizontal_Mode==2)
+  {
+    if(GPS_ok()==TRUE)//首次切定点不满足定点条件，之后又满足定点条件
+    {
+      if(Pos_Hold_SetFlag==0)//满足定点条件后，有且仅设置一次
+      {
+        /*******************将当前惯导水平位置估计作为目标悬停点************************/
+        Total_Controller.Latitude_Position_Control.Expect=NamelessQuad.Position[_ROLL];
+        Total_Controller.Longitude_Position_Control.Expect=NamelessQuad.Position[_PITCH];
+        PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
+        PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
+        PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
+        PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
+        Pos_Hold_SetFlag=1;
+      }
+    }
+    else//定点档位处于定点模式，但未满足定点条件，将Pos_Hold_SetFlag置0，等待满足时再设置悬停点
+    {
+      Pos_Hold_SetFlag=0;//不满足定点条件时，复位位置锁定标志位，等待满足定点条件时，再次锁定
+      PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
+      PID_Integrate_Reset(&Total_Controller.Latitude_Position_Control);//清空水平位置控制器积分项
+      PID_Integrate_Reset(&Total_Controller.Longitude_Speed_Control);//清空水平速度控制器积分项
+      PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
+    }
+  }
   /******若满足GPS定点模式，对Pos_Hold_SetFlag置1，允许进入定点模式*****************/
 }
 
@@ -392,18 +418,17 @@ void Main_Leading_Control(void)
 #if  (Optical_Enable==0)
       Total_Controller.Pitch_Angle_Control.Expect=Target_Angle[0];
       Total_Controller.Roll_Angle_Control.Expect=Target_Angle[1];
-      ncq_control_althold();//高度控制
+			ncq_control_althold();//高度控制
 #else   //光流辅助悬停
       if(Reserve_Mode==2&&OpticalFlow_Is_Work==1
 				&&(Sensor_Flag.Hcsr04_Health==1||tfdata.health==1))//超声波有效且存在光流外设时，才允许进入光流模式
       {  
-//        if(SDK_Take_Over_Ctrl==1)       
-//        {
-//          OpticalFlow_Control(0);//普通光流模式、无线数传与OPENMV参与的SDK模式
-//          ncq_control_althold();//高度控制
-//        }
-//        else if(SDK_Take_Over_Ctrl==2)  
-        if(SDK_Take_Over_Ctrl==2)  
+        if(SDK_Take_Over_Ctrl==1)       
+        {
+          OpticalFlow_Control(0);//普通光流模式、无线数传与OPENMV参与的SDK模式
+          ncq_control_althold();//高度控制
+        }
+        else if(SDK_Take_Over_Ctrl==2)  
         {
             if(SDK_Ctrl_Mode==1)    NCQ_SDK_Run();//用户事先指定的SDK开发者模式 
             else  
@@ -417,19 +442,17 @@ void Main_Leading_Control(void)
       {
         Total_Controller.Pitch_Angle_Control.Expect=Target_Angle[0];
         Total_Controller.Roll_Angle_Control.Expect=Target_Angle[1];
-        ncq_control_althold();//高度控制
+				ncq_control_althold();//高度控制
       }
 #endif
-
+      
     }
-    
-//    else if(Controler_High_Mode==2//定高模式
-//            &&Controler_Horizontal_Mode==2)//GPS定点档位已设置
-//    {
-//      ncq_control_althold();//高度控制OpticalFlow_Control(0);
-//      ncq_control_poshold();//位置控制
-//    }
-
+    else if(Controler_High_Mode==2//定高模式
+            &&Controler_Horizontal_Mode==2)//GPS定点档位已设置
+    {
+      ncq_control_althold();//高度控制OpticalFlow_Control(0);
+      ncq_control_poshold();//位置控制
+    }
     else//其它
     {
       Total_Controller.Pitch_Angle_Control.Expect=Target_Angle[0];
@@ -532,8 +555,8 @@ Y Aixs
 *******************************************************************
 ******************************************************************/
 uint16_t Idel_Cnt=0;
-#define Idel_Transition_Gap 10//怠速递增间隔时间 10*5=50ms
-#define Idel_Transition_Period (Thr_Idle-Thr_Min)//怠速启动最大计数器  50ms*100=5s
+#define Idel_Transition_Gap 4//怠速递增间隔时间 4*5=20ms
+#define Idel_Transition_Period (Thr_Idle-Thr_Min)//怠速启动最大计数器  20ms*100=1s
 uint16_t Thr_Idle_Transition_Cnt=0;
 void Control_Output()
 {
