@@ -1095,7 +1095,7 @@ void RC_Calibration_Trigger(void)
       while(QuadKey2==0);
       RC_Calibration_RESET();//复位遥控器行程值，等待校准完毕
       RC_Calibration_Trigger_Flag=1;
-      Page_Number=13;
+      Page_Number=14;//V1.04
       Key_Right_Release=1;
     }
   }
@@ -1192,7 +1192,7 @@ void ESC_Calibration_Check(void)
     Bling_Set(&Light_1,5000,500,0.2,0,GPIO_PORTF_BASE,GPIO_PIN_1,0);
     Bling_Set(&Light_2,5000,500,0.2,0,GPIO_PORTF_BASE,GPIO_PIN_2,0);
     Bling_Set(&Light_3,5000,500,0.2,0,GPIO_PORTF_BASE,GPIO_PIN_3,0);
-    Page_Number=14;
+    Page_Number=15;//V1.04
   }
 }
 
