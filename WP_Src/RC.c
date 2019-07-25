@@ -135,7 +135,8 @@ void Remote_Control(void )
 			***************************************************************/
       			
 			if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband)
-          &&Last_Lock_State==UnLock)
+          &&Last_Lock_State==UnLock
+            &&Page_Number!=14)
 			{
 				Controler_State=Lock_Controler;
 				Unlock_Makesure_Cnt=0;
