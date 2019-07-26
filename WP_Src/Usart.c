@@ -434,6 +434,12 @@ void ConfigureUART7(void)//串口7初始化
 													 UART_CONFIG_PAR_NONE));	
 		}   
   }
+	else//默认采用US100
+	{
+				UARTConfigSetExpClk(UART7_BASE, SysCtlClockGet(), 9600,
+												(UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+												 UART_CONFIG_PAR_NONE));
+	}
   RingBuff_Init(&COM7_Rx_Buf); 	
   UARTFIFODisable(UART7_BASE);//使能UART0中断	
   UARTIntEnable(UART7_BASE,UART_INT_RX);//使能UART0接收中断		
