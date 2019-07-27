@@ -130,7 +130,7 @@ void Remote_Control(void )
 			
 			
 			/***************************************************************
-			左手油门时，遥控器解锁动作：SwF向下
+			左手油门时，遥控器解锁动作：左手内八
 			左手油门时，遥控器上锁动作：SwF向上
 			***************************************************************/
       			
@@ -153,13 +153,20 @@ void Remote_Control(void )
         Last_Lock_State=Lock;
 			}
 			
-			if(PPM_Databuf[5]>=(RC_Calibration[5].max-RC_Calibration[5].deadband)
-          &&Throttle_Control==1000
+      if(Throttle_Control==1000
+				 &&Yaw_Control<=-Yaw_Max*Scale_Pecent_Max
+					 &&Roll_Control==0
+						 &&Pitch_Control==0)
+				Lock_Makesure_Cnt++;
+			
+			if(Throttle_Control==1000
+				 &&Yaw_Control<=-Yaw_Max*Scale_Pecent_Max
 					 &&Roll_Control==0
 						 &&Pitch_Control==0
-                &&Last_Lock_State==Lock
-                  &&Gyro_Safety_Calibration_Flag==1
-                    &&Check_Calibration_Flag()==0x00)
+							 &&Lock_Makesure_Cnt>200*2.0//持续2.0S
+								 &&Gyro_Safety_Calibration_Flag==1
+									&&Check_Calibration_Flag()==0x00
+                    &&Last_Lock_State==Lock)
 			{
 				Controler_State=Unlock_Controler;
 				if(Controler_High_Mode==2)//如果是在定高模式下解锁 
@@ -183,7 +190,7 @@ void Remote_Control(void )
 				Reset_Mag_Calibartion(1);
 				Reset_Accel_Calibartion(1);
 				Reset_RC_Calibartion(1);
-				Auto_ReLock_Cnt=200*8;//持续6S
+				Auto_ReLock_Cnt=200*6;//持续6S
 				Auto_Relock_Flag_Set=0;
         Last_Lock_State=UnLock;
 			}
