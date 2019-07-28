@@ -1064,7 +1064,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=Yaw_Observation;
   DataBuf[6]=0;
   DataBuf[7]=0;
-*/
+
   DataBuf[0]=NamelessQuad.Position[_YAW];//惯导高度
   DataBuf[1]=NamelessQuad.Speed[_YAW];//惯导速度
   DataBuf[2]=observation_div;//NamelessQuad.Acceleration[_YAW];;//惯导加速度
@@ -1073,17 +1073,17 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=NamelessQuad.Vel_History[_YAW][30];
   DataBuf[6]=WP_Sensor.baro_altitude_div;
 	DataBuf[7]=NamelessQuad.Acceleration[_YAW];
+*/
+
+	DataBuf[0]=Accel_X_Butter_Filter.output[Accel_X_Butter_Filter.N-1];;
+  DataBuf[1]=Accel_Y_Butter_Filter.output[Accel_Y_Butter_Filter.N-1];;
+  DataBuf[2]=Accel_Z_Butter_Filter.output[Accel_Z_Butter_Filter.N-1];;
+  DataBuf[3]=tfdata.strength;
+	DataBuf[4]=tfdata.temperature;
+  DataBuf[5]=tfdata.distance;
 	
-/*
-//	DataBuf[0]=Accel_X_Butter_Filter.output[Accel_X_Butter_Filter.N-1];;
-//  DataBuf[1]=Accel_Y_Butter_Filter.output[Accel_Y_Butter_Filter.N-1];;
-//  DataBuf[2]=Accel_Z_Butter_Filter.output[Accel_Z_Butter_Filter.N-1];;
-//  DataBuf[3]=accel.x;
-//	DataBuf[4]=accel.y;
-//  DataBuf[5]=accel.z;
 	
-	
-  
+ /* 
   DataBuf[0]=GPS_Vel_Div.E;//惯导高度
   DataBuf[1]=GPS_Vel_Div.N;//惯导速度
   DataBuf[2]=NamelessQuad.Acceleration[_PITCH];;//惯导加速度

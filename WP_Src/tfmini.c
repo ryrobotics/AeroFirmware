@@ -42,10 +42,13 @@ void TFmini_Statemachine(void)
 					tfdata.last_div=tfdata.div;															//观测速度保存
 					WP_Sensor.tfmini_updtate_flag=1;
 				}					
-			}
-			
+			}			
 		}
-		if(tfdata.distance<=1200&&tfdata.distance>0)  tfdata.health=1;
+		if(tfdata.distance<=1000
+				&&tfdata.distance>0
+					&&tfdata.strength>100
+						&&tfdata.strength!=65535)  
+			tfdata.health=1;
 		else tfdata.health=0;
 	}	
 }
