@@ -122,10 +122,11 @@ void QuadShow()
     LCD_clear_L(0,2);  LCD_P6x8Str(0,2,"Pitch:");          write_6_8_number(40,2,Pitch);                                    write_6_8_number(90,2,Pitch_Gyro);
     LCD_clear_L(0,3);  LCD_P6x8Str(0,3,"Roll:");           write_6_8_number(40,3,Roll);                            					write_6_8_number(90,3,Roll_Gyro);
     LCD_clear_L(0,4);  LCD_P6x8Str(0,4,"Baro:");           write_6_8_number(40,4,(uint32_t)(WP_Sensor.baro_pressure_raw));  write_6_8_number(90,4,WP_Sensor.baro_altitude);
-    LCD_clear_L(0,5);  LCD_P6x8Str(0,5,"TFmini:");         write_6_8_number(40,5,tfdata.distance);               			      write_6_8_number(90,5,NamelessQuad.Position[_YAW]);
-    LCD_clear_L(0,6);  LCD_P6x8Str(0,6,"SINS:");           write_6_8_number(40,6,Origion_NamelessQuad.Acceleration[_YAW]);  write_6_8_number(90,6,NamelessQuad.Speed[_YAW]);//write_6_8_number(40,6,GPS_Sate_Num); 
-    LCD_clear_L(0,7);  LCD_P6x8Str(0,7,"GyTmp:");          write_6_8_number(40,7,Gyro_Safety_Calibration_Flag);             write_6_8_number(90,7,WP_Sensor.temperature);         		
-                                                           //write_6_8_number(80,7,Origion_NamelessQuad.Acceleration[_YAW]);  write_6_8_number(15,7,GPS_Quality);
+    LCD_clear_L(0,5);  LCD_P6x8Str(0,5,"HC04:");           write_6_8_number(40,5,US_Distance);               			          write_6_8_number(80,5,NamelessQuad.Position[_YAW]);
+    LCD_clear_L(0,6);  LCD_P6x8Str(0,6,"Sate_N:");         write_6_8_number(40,6,GPS_Sate_Num);                    					write_6_8_number(80,6,NamelessQuad.Speed[_YAW]);
+    LCD_clear_L(0,7);  write_6_8_number(0,7,tfdata.distance);
+		                                                       write_6_8_number(20,7,Gyro_Safety_Calibration_Flag);  
+		write_6_8_number(30,7,WP_Sensor.temperature);          write_6_8_number(75,7,Origion_NamelessQuad.Acceleration[_YAW]);
 		
   }
   else  if(Page_Number==1)

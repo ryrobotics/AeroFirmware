@@ -64,8 +64,8 @@ void Controler_Mode_Select()
   if(PPM_Databuf[4]>=(RC_Calibration[4].max-RC_Calibration[4].deadband))       Controler_High_Mode=2;//气压计、超神波定高
   else if(PPM_Databuf[4]<=(RC_Calibration[4].min+RC_Calibration[4].deadband))  Controler_High_Mode=1;//纯姿态自稳
   
-//  if(PPM_Databuf[5]>=(RC_Calibration[5].max-RC_Calibration[5].deadband))         Controler_Horizontal_Mode=2;//水平位置控制
-//  else if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))   Controler_Horizontal_Mode=1;//姿态自稳控制
+  if(PPM_Databuf[5]>=(RC_Calibration[5].max-RC_Calibration[5].deadband))         Controler_Horizontal_Mode=2;//水平位置控制
+  else if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))   Controler_Horizontal_Mode=1;//姿态自稳控制
   
   if(PPM_Databuf[6]>=(RC_Calibration[6].max-RC_Calibration[6].deadband))            {Controler_Land_Mode=2;}//返航模式}
   else if(PPM_Databuf[6]<=(RC_Calibration[6].middle+RC_Calibration[6].deadband))   {Controler_Land_Mode=1;}//非返航模式
@@ -90,11 +90,6 @@ void Controler_Mode_Select()
     OpticalFlow_Ctrl_Reset();
   }
   
-  if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband))//一键上锁清积分
-  {
-    OpticalFlow_SINS_Reset();
-    OpticalFlow_Ctrl_Reset();
-  }
   
   if(Reserve_Mode_Cnt>=1) Reserve_Mode_Cnt--;
   if(Reserve_Mode_Cnt==0) Reserve_Mode_Fast_Exchange_Cnt=0; 
@@ -145,7 +140,7 @@ void Controler_Mode_Select()
   if(Unwanted_Lock_Flag==1)//定高模式解锁后，无任何操作
   {
     Thr_Push_Over_State=Thr_Push_Over_Deadband();
-    if(Thr_Push_Over_State==2)//只要向上推过了中位死区，即不允许自动上锁操作
+    if(Thr_Push_Over_State==2)//只要向上推过了中位死区，即把允许自动上锁操作
     {
       Unwanted_Lock_Flag=0;
     }
@@ -169,11 +164,11 @@ void Controler_Mode_Select()
     if(Controler_High_Mode==1)  {Control_Mode_Change=1;}//定高切自稳
   }
   
-/*  if(Controler_Horizontal_Mode!=Last_Controler_Horizontal_Mode)//位置通道有切换
+  if(Controler_Horizontal_Mode!=Last_Controler_Horizontal_Mode)//位置通道有切换
   {
     if(Controler_Horizontal_Mode==2)  {Control_Mode_Change=2;Pos_Hold_SetFlag=0;}//自稳切定点，设置悬停点
     if(Controler_Horizontal_Mode==1)  {Control_Mode_Change=2;Pos_Hold_SetFlag=1;}//定点时自稳
-  }  */
+  }
   
   
   if(Control_Mode_Change==1)//存在定高模式切换，高度只设置一次
@@ -190,13 +185,13 @@ void Controler_Mode_Select()
     }
     Control_Mode_Change=0;//将模式切换位置0,有且仅处理一次
   }
-/*  else if(Control_Mode_Change==2)//存在定点模式切换，悬停位置只设置一次
+  else if(Control_Mode_Change==2)//存在定点模式切换，悬停位置只设置一次
   {
     if(Controler_Horizontal_Mode==Pos_Hold_Mode)//本次为定点模式
     {
       if(Pos_Hold_SetFlag==0&&(GPS_ok()==TRUE))//满足设置悬停点条件
       {
-        //将当前惯导水平位置估计作为目标悬停点
+        /*******************将当前惯导水平位置估计作为目标悬停点************************/
         Total_Controller.Latitude_Position_Control.Expect=NamelessQuad.Position[_ROLL];
         Total_Controller.Longitude_Position_Control.Expect=NamelessQuad.Position[_PITCH];
         PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
@@ -216,18 +211,18 @@ void Controler_Mode_Select()
     Control_Mode_Change=0;//已响应本次定点档位切换
   }
   
-  //当前档位为定点模式，但显示悬停点未设置，说明之前未满足设置定点条件有三种情况
+  /******当前档位为定点模式，但显示悬停点未设置，说明之前未满足设置定点条件有三种情况********
   1、初始通过开关切定点模式时，GPS状态未满足悬停条件；
   2、初始通过开关切定点模式时，GPS状态未满足悬停条件，之后持续检测仍然未满足GPS定点条件；
   3、之前GPS状态满足悬停条件，但由于GPS信号质量变差，自动切换至不满足GPS定点条件；
-  *******重新判断当下是否满足定点条件，如满足条件更新悬停点，允许进入定点模式******
+  *******重新判断当下是否满足定点条件，如满足条件更新悬停点，允许进入定点模式******/
   if(Controler_Horizontal_Mode==2)
   {
     if(GPS_ok()==TRUE)//首次切定点不满足定点条件，之后又满足定点条件
     {
       if(Pos_Hold_SetFlag==0)//满足定点条件后，有且仅设置一次
       {
-        *******************将当前惯导水平位置估计作为目标悬停点************************
+        /*******************将当前惯导水平位置估计作为目标悬停点************************/
         Total_Controller.Latitude_Position_Control.Expect=NamelessQuad.Position[_ROLL];
         Total_Controller.Longitude_Position_Control.Expect=NamelessQuad.Position[_PITCH];
         PID_Integrate_Reset(&Total_Controller.Latitude_Speed_Control);//清空水平速度控制器积分项
@@ -246,7 +241,7 @@ void Controler_Mode_Select()
       PID_Integrate_Reset(&Total_Controller.Longitude_Position_Control);//清空水平位置控制器积分项
     }
   }
-  ******若满足GPS定点模式，对Pos_Hold_SetFlag置1，允许进入定点模式******************/
+  /******若满足GPS定点模式，对Pos_Hold_SetFlag置1，允许进入定点模式*****************/
 }
 
 
@@ -452,12 +447,12 @@ void Main_Leading_Control(void)
 #endif
       
     }
-/*  else if(Controler_High_Mode==2//定高模式
+    else if(Controler_High_Mode==2//定高模式
             &&Controler_Horizontal_Mode==2)//GPS定点档位已设置
     {
       ncq_control_althold();//高度控制OpticalFlow_Control(0);
       ncq_control_poshold();//位置控制
-    }*/
+    }
     else//其它
     {
       Total_Controller.Pitch_Angle_Control.Expect=Target_Angle[0];
