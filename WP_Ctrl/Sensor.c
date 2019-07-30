@@ -35,7 +35,7 @@
 #include "Sensor.h"
 #include "Filter.h"
 
-#define  YAW_FUSION_MODE_QUAD  1	//1：偏航角来源于四元数更新，时间长容易偏移，
+#define  YAW_FUSION_MODE_QUAD  0	//1：偏航角来源于四元数更新，时间长容易偏移，
 																	//   针对电赛室内环境磁场干扰大的情况，推荐此方式
 																	//0：偏航角来源于偏航角速度与磁力计一阶互补，GPS定点时选择此方式
 																	//   推荐采用外置磁力计数据

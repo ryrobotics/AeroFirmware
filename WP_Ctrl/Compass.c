@@ -34,10 +34,10 @@
 #include "Headfile.h"
 #include "Compass.h"
 
-#define MAG_EXTERNAL_ENABLE  0//当采用外部磁力计时使能1
+#define MAG_EXTERNAL_ENABLE  1//当采用外部磁力计时使能1
 #define MAG_EXTERNAL_IST8310 0
 #define MAG_EXTERNAL_QMC5883 1
-#define MAG_EXTERNAL_TYPE    MAG_EXTERNAL_IST8310 
+#define MAG_EXTERNAL_TYPE    MAG_EXTERNAL_QMC5883
 
 
 void Compass_Init(void)
