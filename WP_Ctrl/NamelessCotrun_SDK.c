@@ -34,10 +34,103 @@
 #include "Headfile.h"
 #include "NamelessCotrun_SDK.h"
 
+float SDK_trust_cnt=0;
+
+uint8_t Start_Turnung_Flag=0;
+
 bool auto_altland(float taret_climb_rate,float target_climb_alt)
 {
   return land_althold(taret_climb_rate,target_climb_alt);
 }
+
+//SDK本模式需要在光流模式下使用
+uint8_t Turning_Left(float delta_angle,SDK_Status *Status,uint16_t number)
+{
+	static float end_angle=0;
+	ncq_control_althold();//高度控制依然进行
+	if(Status->Status[number].Start_Flag==1
+					&&Status->Status[number].Execute_Flag==1
+					&&Status->Status[number].End_flag==1)
+	{
+		OpticalFlow_Control_Pure(0);//完成之后，进行光流悬停
+		Start_Turnung_Flag=0;
+		return 1;
+	}
+	else
+	{
+		if(Status->Status[number].Start_Flag==0)
+		{
+			end_angle=Yaw+delta_angle;
+			Start_Turnung_Flag=1;
+			Status->Status[number].Start_Flag=1;
+		}
+		if(Yaw>=end_angle)
+		{
+			Status->Status[number].Execute_Flag=1;
+			Status->Status[number].End_flag=1;
+			OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+			OpticalFlow_Pos_Ctrl_Expect.x=0;
+			OpticalFlow_Pos_Ctrl_Expect.y=0;
+			Total_Controller.Yaw_Angle_Control.Expect=Yaw;
+			end_angle=0;
+			Status->Transition_Time[number]=200;//200*5ms=2s
+			return 1;//返回完成
+		}
+		else
+		{
+			OpticalFlow_Pos_Ctrl_Expect.x=0;
+			OpticalFlow_Pos_Ctrl_Expect.y=0;
+			Status->Status[number].Execute_Flag=1;
+			Total_Controller.Yaw_Angle_Control.Expect=end_angle;
+			return 0;
+		}
+	}
+}
+
+//SDK本模式需要在光流模式下使用
+uint8_t Turning_Right(float delta_angle,SDK_Status *Status,uint16_t number)
+{
+	static float end_angle=0;
+	ncq_control_althold();//高度控制依然进行
+	if(Status->Status[number].Start_Flag==1
+					&&Status->Status[number].Execute_Flag==1
+					&&Status->Status[number].End_flag==1)
+	{
+		OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+		Start_Turnung_Flag=0;
+		return 1;
+	}
+	else
+	{
+		if(Status->Status[number].Start_Flag==0)
+		{
+			end_angle=Yaw-delta_angle;
+			Start_Turnung_Flag=1;
+			Status->Status[number].Start_Flag=1;	
+		}
+		if(Yaw<end_angle)
+		{
+			Status->Status[number].Execute_Flag=1;
+			Status->Status[number].End_flag=1;
+			OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+			OpticalFlow_Pos_Ctrl_Expect.x=0;
+			OpticalFlow_Pos_Ctrl_Expect.y=0;
+			Total_Controller.Yaw_Angle_Control.Expect=Yaw;
+			end_angle=0;
+			Status->Transition_Time[number]=200;//200*5ms=1s
+			return 1;//返回完成
+		}
+		else
+		{
+			OpticalFlow_Pos_Ctrl_Expect.x=0;
+			OpticalFlow_Pos_Ctrl_Expect.y=0;
+			Status->Status[number].Execute_Flag=1;
+			Total_Controller.Yaw_Angle_Control.Expect=end_angle;
+			return 0;
+		}
+	}
+}
+
 //SDK本模式需要在光流模式下使用
 uint8_t move_with_speed_target(float x_target,float y_target,float delta,SDK_Status *Status,uint16_t number)
 {
@@ -70,7 +163,7 @@ uint8_t move_with_speed_target(float x_target,float y_target,float delta,SDK_Sta
       OpticalFlow_Pos_Ctrl_Expect.x=0;
       OpticalFlow_Pos_Ctrl_Expect.y=0;
       end_time=0;
-      Status->Transition_Time[number]=400;//400*5ms=2s
+      Status->Transition_Time[number]=200;//200*5ms=2s
       return 1;//返回完成
     }
     else
@@ -277,16 +370,130 @@ uint8_t move_with_z_target(float z_target,float z_vel,float delta,SDK_Status *St
   return 0;
 }
 
-//#define NCQ_SDK_DUTY1 move_with_speed_target(10,0,2000 ,&SDK_Duty_Status,1-1)//左
-//#define NCQ_SDK_DUTY2 move_with_speed_target(0,10,2000 ,&SDK_Duty_Status,2-1)//前
-//#define NCQ_SDK_DUTY3 move_with_speed_target(-10,0,2000,&SDK_Duty_Status,3-1)//右
-//#define NCQ_SDK_DUTY4 move_with_speed_target(0,-10,2000,&SDK_Duty_Status,4-1)//后
+uint8_t move_with_openmv_speed(float x_target,float y_target,float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number)
+{
+	static float end_time=0;
+  Vector2f vel_target;
+  Testime dt;
+  vel_target.x=x_target;
+  vel_target.y=y_target;
+  Test_Period(&dt);
+  ncq_control_althold();//高度控制依然进行
+  if(Status->Status[number].Start_Flag==1
+     &&Status->Status[number].Execute_Flag==1
+       &&Status->Status[number].End_flag==1)
+  {
+    OpticalFlow_Control_Pure(0);//完成之后，进行光流悬停
+    return 1;
+  }
+  else
+  {
+    if(Status->Status[number].Start_Flag==0) 
+    {
+      end_time=dt.Now_Time+delta;//单位ms 
+      Status->Status[number].Start_Flag=1;
+			SDK_trust_cnt=0;
+			SDK_DT_Send_Check(OpenMv_Mode);
+    } 
+    if(dt.Now_Time>end_time|| (SDK_trust_cnt>=5&&(end_time-dt.Now_Time<0.6f*delta)))
+    {
+      Status->Status[number].Execute_Flag=1;
+      Status->Status[number].End_flag=1;
+      OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+      end_time=0;
+			SDK_trust_cnt=0;
+      Status->Transition_Time[number]=200;//200*5ms=1s
+      return 1;//返回完成
+    }
+    else
+    { 
+      if(SDK_Point.trust_flag==1) SDK_trust_cnt++;
+			else SDK_trust_cnt=0;
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+      Status->Status[number].Execute_Flag=1;
+      OpticalFlow_Vel_Control(vel_target);//给定速度期望
+      return 0;
+    }
+  }
+}
+
+uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number)
+{
+	static float end_time=0;
+  Testime dt;
+
+  Test_Period(&dt);
+  ncq_control_althold();//高度控制依然进行
+  if(Status->Status[number].Start_Flag==1
+     &&Status->Status[number].Execute_Flag==1
+       &&Status->Status[number].End_flag==1)
+  {
+    OpticalFlow_Control_Pure(0);//完成之后，进行光流悬停
+    return 1;
+  }
+  else
+  {
+    if(Status->Status[number].Start_Flag==0)//openmv任务切换，防冲突，只执行一次
+    {
+//      if(SDK_Mode_Set!=0x03)//下视openmv任务切换
+//      {
+//        SDK_DT_Send_Check(SDK_Mode_Set);//改变下视openmv任务
+//        SDK_DT_Send_Check_Front(WAIT_MODE);//前视openmv进入空模式，防止冲突
+//      }
+//      else
+//      {
+//        SDK_DT_Send_Check_Front(REC_MODE);//前视openmv进入矩形检测任务
+//        SDK_DT_Send_Check(WAIT_MODE);//下视openmv进入空模式，防止冲突
+//      }
+      SDK_DT_Send_Check(OpenMv_Mode);
+			end_time=dt.Now_Time+delta;//单位ms 
+      Status->Status[number].Start_Flag=1;
+      
+      Unwanted_Lock_Flag=0;//允许自动上锁
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+    } 
+    if(dt.Now_Time>end_time)
+    {
+      Status->Status[number].Execute_Flag=1;
+      Status->Status[number].End_flag=1;
+      OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+      end_time=0;
+      Status->Transition_Time[number]=200;//200*5ms=1s
+      return 1;//返回完成
+    }
+    else
+    { 
+      Status->Status[number].Execute_Flag=1;
+      OpticalFlow_Control(0);//普通光流模式、无线数传与OPENMV参与的SDK模式
+      ncq_control_althold();//高度控制
+      return 0;
+    }
+  }
+}
 
 
-#define NCQ_SDK_DUTY_MAX   3
+#define NCQ_SDK_DUTY_MAX   13
+
 #define NCQ_SDK_DUTY1 move_with_z_target(120,0,0,&SDK_Duty_Status,1-1)
-#define NCQ_SDK_DUTY2 move_with_xy_target(0,100,&SDK_Duty_Status,2-1)
-#define NCQ_SDK_DUTY3 move_with_z_target(-150,0,0,&SDK_Duty_Status,3-1)
+#define NCQ_SDK_DUTY2 move_with_openmv_speed(0,20,7000,RGB_MODE,&SDK_Duty_Status,2-1)
+#define NCQ_SDK_DUTY3 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,3-1)
+#define NCQ_SDK_DUTY4 move_with_openmv_speed(0,20,5500,RGB_MODE,&SDK_Duty_Status,4-1)
+#define NCQ_SDK_DUTY5 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,5-1)
+#define NCQ_SDK_DUTY6 move_with_openmv_speed(20,0,12000,RGB_MODE,&SDK_Duty_Status,6-1)
+#define NCQ_SDK_DUTY7 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,7-1)
+#define NCQ_SDK_DUTY8 move_with_openmv_speed(0,-20,7000,RGB_MODE,&SDK_Duty_Status,8-1)
+#define NCQ_SDK_DUTY9 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,9-1)
+#define NCQ_SDK_DUTY10 move_with_speed_target(0,-20,7000,&SDK_Duty_Status,10-1)
+#define NCQ_SDK_DUTY11 Turning_Right(90,&SDK_Duty_Status,11-1)
+#define NCQ_SDK_DUTY12 move_with_openmv_speed(0,20,12000,CIRCLE_MODE,&SDK_Duty_Status,12-1)
+#define NCQ_SDK_DUTY13 move_with_z_target(-140,0,0,&SDK_Duty_Status,13-1)
+
 
 
 SDK_Status SDK_Duty_Status;
@@ -308,10 +515,18 @@ void NCQ_SDK_Run(void)
   if(SDK_Duty_Cnt==0)        NCQ_SDK_DUTY1;
   else if(SDK_Duty_Cnt==1)   NCQ_SDK_DUTY2;
   else if(SDK_Duty_Cnt==2)   NCQ_SDK_DUTY3;
-  //else if(SDK_Duty_Cnt==3)   NCQ_SDK_DUTY4;
-  //else if(SDK_Duty_Cnt==4)   NCQ_SDK_DUTY5;
-  //else if(SDK_Duty_Cnt==5)   NCQ_SDK_DUTY6;
-  //else if(SDK_Duty_Cnt==6)   NCQ_SDK_DUTY7;
+  else if(SDK_Duty_Cnt==3)   NCQ_SDK_DUTY4;
+  else if(SDK_Duty_Cnt==4)   NCQ_SDK_DUTY5;
+  else if(SDK_Duty_Cnt==5)   NCQ_SDK_DUTY6;
+  else if(SDK_Duty_Cnt==6)   NCQ_SDK_DUTY7;
+	else if(SDK_Duty_Cnt==7)   NCQ_SDK_DUTY8;
+	else if(SDK_Duty_Cnt==8)   NCQ_SDK_DUTY9;
+	else if(SDK_Duty_Cnt==9)   NCQ_SDK_DUTY10;
+	else if(SDK_Duty_Cnt==10)  NCQ_SDK_DUTY11;
+	else if(SDK_Duty_Cnt==11)   NCQ_SDK_DUTY12;
+	else if(SDK_Duty_Cnt==12)   NCQ_SDK_DUTY13;
+	
+	
   else
   {
     ncq_control_althold();//高度控制
@@ -407,7 +622,7 @@ void SDK_DT_Send_Check(unsigned char mode)
 }
 
 uint8_t SDK_Now_Mode=0x00;
-uint8_t SDK_Mode_Set=0x02;
+uint8_t SDK_Mode_Set=0x0F;
 #define SDK_TARGET_X_OFFSET  0
 #define SDK_TARGET_Y_OFFSET  0//-12
 Line  SDK_Line;
@@ -415,7 +630,7 @@ Point SDK_Point;
 uint8_t SDK_Recieve_Flag=0;
 Vector2f SDK_Target,SDK_Target_Offset;
 float SDK_Target_Yaw_Gyro=0;
-#define  Pixel_Size    0.0048
+#define  Pixel_Size    0.0024//QQQVGA为0.0048，QQVGA为0.0024，单位为cm
 #define  Focal_Length  0.42
 
 void SDK_Line_DT_Reset()
@@ -450,7 +665,7 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
   {
     SDK_Recieve_Flag=1;
   }
-  else if(*(data_buf+2)==0XF3)//线检测
+  else if(*(data_buf+2)==0XF2)//线检测
   {
     SDK_Now_Mode=0x02;
     SDK_Line.x=*(data_buf+4)<<8|*(data_buf+5);
@@ -462,7 +677,7 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
     SDK_Line.left_ok  = (uint8_t)((SDK_Line.flag & 0x04)>>2);
     SDK_Line.right_ok = (uint8_t)((SDK_Line.flag & 0x08)>>3);
     
-    if(SDK_Line.up_ok==1||SDK_Line.down_ok==1)
+    if(SDK_Line.up_ok==1&&SDK_Line.down_ok==1)
     {
       SDK_Line.line_ctrl_enable=1;
       SDK_Target.x=(Pixel_Size*(40-SDK_Line.x)*NamelessQuad.Position[_YAW])/Focal_Length
@@ -477,7 +692,7 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
     
     SDK_Point_DT_Reset();
   }
-  else if(*(data_buf+2)==0XF2)//点检测
+  else if(*(data_buf+2)==0XF1||*(data_buf+2)==0XF4||*(data_buf+2)==0XF5)//点检测 RGB 圆
   {
     SDK_Now_Mode=0x01;
     SDK_Point.x=*(data_buf+4)<<8|*(data_buf+5);
@@ -499,9 +714,9 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
     SDK_Target_Offset.x=SDK_TARGET_X_OFFSET;
     SDK_Target_Offset.y=SDK_TARGET_Y_OFFSET;
     
-    SDK_Target.x=(Pixel_Size*(40-SDK_Point.x)*NamelessQuad.Position[_YAW])/Focal_Length
+    SDK_Target.x=(Pixel_Size*(80-SDK_Point.x)*NamelessQuad.Position[_YAW])/Focal_Length
       +NamelessQuad.Position[_YAW]*tan(Roll* DEG2RAD)-SDK_Target_Offset.x;
-    SDK_Target.y=(Pixel_Size*(30-SDK_Point.y)*NamelessQuad.Position[_YAW])/Focal_Length
+    SDK_Target.y=(Pixel_Size*(60-SDK_Point.y)*NamelessQuad.Position[_YAW])/Focal_Length
       +NamelessQuad.Position[_YAW]*tan(Pitch* DEG2RAD)-SDK_Target_Offset.y;  
     SDK_Line_DT_Reset(); 
   }
@@ -604,14 +819,14 @@ void SDK_Data_Prase(void)
 }
 void SDK_Init(void)
 {
-  float sdk_mode_default=0;
+//  float sdk_mode_default=0;
   SDK_Line_DT_Reset();//复位SDK线检测数据
   SDK_Point_DT_Reset();//复位SDK点检测数据
-  ReadFlashParameterOne(SDK_MODE_DEFAULT,&sdk_mode_default);
-  if(isnan(sdk_mode_default)==0)
-  {
-    SDK_Mode_Set=(uint8_t)(sdk_mode_default);
+//  ReadFlashParameterOne(SDK_MODE_DEFAULT,&sdk_mode_default);
+//  if(isnan(sdk_mode_default)==0)
+//  {
+//    SDK_Mode_Set=(uint8_t)(sdk_mode_default);
     SDK_DT_Send_Check(SDK_Mode_Set);//初始化opemmv工作模式，默认以上次工作状态配置
-  } 
+//  } 
 }
 

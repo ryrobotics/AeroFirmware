@@ -43,6 +43,7 @@ Vector2f OpticalFlow_Pos_Ctrl_Expect={0};
 Vector2f OpticalFlow_Pos_Ctrl_Err={0};
 Vector2f OpticalFlow_Pos_Ctrl_Integrate={0};
 Vector2f OpticalFlow_Pos_Ctrl_Output={0};
+Vector2f SDK_Velocity_Target={0};
 
 Vector2f OpticalFlow_Ctrl_Expect={0};
 Vector2f OpticalFlow_Ctrl_Err={0};
@@ -168,9 +169,9 @@ void OpticalFlow_Control(uint8_t force_brake_flag)
           Total_Controller.SDK_Roll_Position_Control.Expect=0;
           Total_Controller.SDK_Roll_Position_Control.FeedBack=SDK_Target.x;
           PID_Control_SDK_Err_LPF(&Total_Controller.SDK_Roll_Position_Control,1);   
-          accel_target.x=constrain_float(Total_Controller.SDK_Roll_Position_Control.Control_OutPut,
-                                         -Total_Controller.Optical_Speed_Control.Control_OutPut_Limit,
-                                         Total_Controller.Optical_Speed_Control.Control_OutPut_Limit);                             
+//          accel_target.x=constrain_float(Total_Controller.SDK_Roll_Position_Control.Control_OutPut,
+//                                         -Total_Controller.Optical_Speed_Control.Control_OutPut_Limit,
+//                                         Total_Controller.Optical_Speed_Control.Control_OutPut_Limit);                             
           Total_Controller.Roll_Angle_Control.Expect=constrain_float(fast_atan(accel_target.x/(GRAVITY_MSS*100))*RAD2DEG,-30,30);//roll                                
           SDK_Ctrl_Cnt=0;
         }
@@ -190,28 +191,20 @@ void OpticalFlow_Control(uint8_t force_brake_flag)
       else if(SDK_Point.flag==1)//¸ú×Ùµã¼ì²â
       {
         SDK_Ctrl_Cnt++;
-        if(SDK_Ctrl_Cnt>=4)//20ms
+        if(SDK_Ctrl_Cnt>=1)//5ms
         {
           Total_Controller.SDK_Roll_Position_Control.Expect=0;
           Total_Controller.SDK_Roll_Position_Control.FeedBack=SDK_Target.x;
           PID_Control_SDK_Err_LPF(&Total_Controller.SDK_Roll_Position_Control,SDK_Point.trust_flag);
-          
+ 
           Total_Controller.SDK_Pitch_Position_Control.Expect=0;
           Total_Controller.SDK_Pitch_Position_Control.FeedBack=SDK_Target.y;
           PID_Control_SDK_Err_LPF(&Total_Controller.SDK_Pitch_Position_Control,SDK_Point.trust_flag);
           
-          accel_target.x=constrain_float(Total_Controller.SDK_Roll_Position_Control.Control_OutPut,
-                                         -Total_Controller.Optical_Speed_Control.Control_OutPut_Limit,
-                                         Total_Controller.Optical_Speed_Control.Control_OutPut_Limit);                             
-          Total_Controller.Roll_Angle_Control.Expect=constrain_float(fast_atan(accel_target.x/(GRAVITY_MSS*100))*RAD2DEG,-30,30);//roll
+          SDK_Velocity_Target.x=-constrain_float(Total_Controller.SDK_Roll_Position_Control.Control_OutPut,-20,20);                                                         
+          SDK_Velocity_Target.y=-constrain_float(Total_Controller.SDK_Pitch_Position_Control.Control_OutPut,-20,20);//450
           
-          
-          accel_target.y=constrain_float(Total_Controller.SDK_Pitch_Position_Control.Control_OutPut,
-                                         -Total_Controller.Optical_Speed_Control.Control_OutPut_Limit,
-                                         Total_Controller.Optical_Speed_Control.Control_OutPut_Limit);//450
-          Total_Controller.Pitch_Angle_Control.Expect=constrain_float(fast_atan(accel_target.y*Cos_Roll/(GRAVITY_MSS*100))*RAD2DEG,-30,30);//pitch
-          
-          SDK_Ctrl_Cnt=0;
+					OpticalFlow_Vel_Control(SDK_Velocity_Target);
         }
         OpticalFlow_Pos_Ctrl_Expect.x=0;
         OpticalFlow_Pos_Ctrl_Expect.y=0;
