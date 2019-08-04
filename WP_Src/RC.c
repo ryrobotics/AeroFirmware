@@ -54,7 +54,7 @@ uint16_t RC_Deadzone_Buttom=0,RC_Deadzone_Top=0;
 Butter_BufferData RC_LPF_Buffer[4];
 uint16_t PPM_LPF_Databuf[4];
 
-
+uint8_t Last_Lock_State=UnLock;
 
 int16_t constrain_int16_t(int16_t amt, int16_t low, int16_t high){
   return ((amt)<(low)?(low):((amt)>(high)?(high):(amt)));
@@ -160,26 +160,13 @@ void Remote_Control(void )
 			
 			
 			/***************************************************************
-			左手油门时，遥控器解锁动作：左边摇杆处于低位并向内侧打杆
-			左手油门时，遥控器上锁动作：左边摇杆处于低位并向外侧打杆
+			左手油门时，遥控器解锁动作：SwF向下
+			左手油门时，遥控器上锁动作：SwF向上
 			***************************************************************/
-			if(Throttle_Control==1000
-				 &&Yaw_Control>=Yaw_Max*Scale_Pecent_Max
-					 &&Roll_Control==0
-						 &&Pitch_Control==0)
-			{
-				Unlock_Makesure_Cnt++;
-				if(Forced_Lock_Makesure_Cnt<10000) Forced_Lock_Makesure_Cnt++;
-			}
-			
-			
-			
-			if(Throttle_Control==1000
-				 &&Yaw_Control>=Yaw_Max*Scale_Pecent_Max
-					 &&Roll_Control==0
-						 &&Pitch_Control==0
-							 &&(Unlock_Makesure_Cnt>200*2.0//持续2.0S
-									||Forced_Lock_Makesure_Cnt>=200*5))
+      			
+			if(PPM_Databuf[5]<=(RC_Calibration[5].min+RC_Calibration[5].deadband)
+          &&Last_Lock_State==UnLock
+            &&Page_Number!=14)
 			{
 				Controler_State=Lock_Controler;
 				Unlock_Makesure_Cnt=0;
@@ -193,21 +180,16 @@ void Remote_Control(void )
 				Reset_Mag_Calibartion(1);
 				Reset_Accel_Calibartion(1);
 				Reset_RC_Calibartion(1);
+        Last_Lock_State=Lock;
 			}
 			
-			if(Throttle_Control==1000
-				 &&Yaw_Control<=-Yaw_Max*Scale_Pecent_Max
-					 &&Roll_Control==0
-						 &&Pitch_Control==0)
-				Lock_Makesure_Cnt++;
-			
-			if(Throttle_Control==1000
-				 &&Yaw_Control<=-Yaw_Max*Scale_Pecent_Max
+			if(PPM_Databuf[5]>=(RC_Calibration[5].max-RC_Calibration[5].deadband)
+          &&Throttle_Control==1000
 					 &&Roll_Control==0
 						 &&Pitch_Control==0
-							 &&Lock_Makesure_Cnt>200*2.0//持续2.0S
-								 &&Gyro_Safety_Calibration_Flag==1
-									&&Check_Calibration_Flag()==0x00)
+                &&Last_Lock_State==Lock
+                  &&Gyro_Safety_Calibration_Flag==1
+                    &&Check_Calibration_Flag()==0x00)
 			{
 				Controler_State=Unlock_Controler;
 				if(Controler_High_Mode==2)//如果是在定高模式下解锁 
@@ -231,8 +213,9 @@ void Remote_Control(void )
 				Reset_Mag_Calibartion(1);
 				Reset_Accel_Calibartion(1);
 				Reset_RC_Calibartion(1);
-				Auto_ReLock_Cnt=200*6;//持续6S
+				Auto_ReLock_Cnt=200*8;//持续6S
 				Auto_Relock_Flag_Set=0;
+        Last_Lock_State=UnLock;
 			}
 			
 			
