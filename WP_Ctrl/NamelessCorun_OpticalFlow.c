@@ -39,7 +39,7 @@
 #include <Time.h>
 
 
-#define OpticalFlow_Ringbuf  COM6_Rx_Buf
+#define OpticalFlow_Ringbuf  COM2_Rx_Buf
 
 uint8_t OpticalFlow_Is_Work=0;
 float opticalflow_high=1000;//默认1m=100cm=1000mm
@@ -171,8 +171,8 @@ Vector2f OpticalFlow_Position={0};
 Vector2f OpticalFlow_Speed={0};
 Vector2f OpticalFlow_Speed_Err={0};
 Vector2f OpticalFlow_Position_Err={0};
-uint16_t Optflow_Sync_Cnt=0;
-float CF_Parameter[2]={0.08f,0.0f};//光流互补滤波权重  0.08  0
+uint16_t Optflow_Sync_Cnt=5;
+float CF_Parameter[2]={0.05f,0.0f};//光流互补滤波权重 0.1  0.1   0.08  0
 //光流位置融合权重给为0，表示不加入修正位置修正，因为低成本光流模块漂移较大，亦可以给较小值如0.2f
 #define Optical_Output_Dt  0.02f//50hz
 void  OpticalFlow_CF(float flow_height,Vector2f accel,Vector2f flow)
@@ -189,13 +189,15 @@ void  OpticalFlow_CF(float flow_height,Vector2f accel,Vector2f flow)
     OpticalFlow_Speed.y=flow.y*use_height;//光流速度
     OpticalFlow_Position.x+=OpticalFlow_Speed.x*Optical_Output_Dt;//光流位移
     OpticalFlow_Position.y+=OpticalFlow_Speed.y*Optical_Output_Dt;//光流位移
-    OpticalFlow_Speed_Err.x=OpticalFlow_Speed.x-OpticalFlow_SINS.Speed[_PITCH];
-    OpticalFlow_Speed_Err.y=OpticalFlow_Speed.y-OpticalFlow_SINS.Speed[_ROLL];
-    OpticalFlow_Position_Err.x=OpticalFlow_Position.x-OpticalFlow_SINS.Position[_PITCH];
-    OpticalFlow_Position_Err.y=OpticalFlow_Position.y-OpticalFlow_SINS.Position[_ROLL];
+    //OpticalFlow_Speed_Err.x=OpticalFlow_Speed.x-OpticalFlow_SINS.Speed[_PITCH];
+    //OpticalFlow_Speed_Err.y=OpticalFlow_Speed.y-OpticalFlow_SINS.Speed[_ROLL];
+    //OpticalFlow_Position_Err.x=OpticalFlow_Position.x-OpticalFlow_SINS.Position[_PITCH];
+    //OpticalFlow_Position_Err.y=OpticalFlow_Position.y-OpticalFlow_SINS.Position[_ROLL];
     Optflow_Is_Okay=0;
-    //OpticalFlow_Speed_Err.x=OpticalFlow_Speed.x-OpticalFlow_SINS.Pos_History[_PITCH][Optflow_Sync_Cnt];
-    //OpticalFlow_Speed_Err.y=OpticalFlow_Speed.y-OpticalFlow_SINS.Pos_History[_ROLL][Optflow_Sync_Cnt];
+    OpticalFlow_Position_Err.x=OpticalFlow_Position.x-OpticalFlow_SINS.Pos_History[_PITCH][Optflow_Sync_Cnt];
+    OpticalFlow_Position_Err.y=OpticalFlow_Position.y-OpticalFlow_SINS.Pos_History[_ROLL][Optflow_Sync_Cnt];
+		OpticalFlow_Speed_Err.x=OpticalFlow_Speed.x-OpticalFlow_SINS.Vel_History[_PITCH][Optflow_Sync_Cnt];
+    OpticalFlow_Speed_Err.y=OpticalFlow_Speed.y-OpticalFlow_SINS.Vel_History[_ROLL][Optflow_Sync_Cnt];
   }
   else
   {
@@ -218,14 +220,19 @@ void  OpticalFlow_CF(float flow_height,Vector2f accel,Vector2f flow)
 
   OpticalFlow_SINS.Speed[_PITCH]+=OpticalFlow_SINS.Acceleration[_PITCH]*optical_dt+CF_Parameter[0]*OpticalFlow_Speed_Err.x;
   OpticalFlow_SINS.Speed[_ROLL]+=OpticalFlow_SINS.Acceleration[_ROLL]*optical_dt+CF_Parameter[0]*OpticalFlow_Speed_Err.y; 
-  
-  OpticalFlow_SINS.Pos_History[_ROLL][0]=OpticalFlow_SINS.Position[_ROLL];
-  OpticalFlow_SINS.Pos_History[_PITCH][0]=OpticalFlow_SINS.Position[_PITCH];  
-  //for(uint16_t i=Num-1;i>0;i--)
-  //{
-  //  OpticalFlow_SINS.Pos_History[_ROLL][i]=OpticalFlow_SINS.Pos_History[_ROLL][i-1];
-  //  OpticalFlow_SINS.Pos_History[_PITCH][i]=OpticalFlow_SINS.Pos_History[_PITCH][i-1]; 
-  //}  
+   
+	
+	for(uint16_t i=Num-1;i>0;i--)
+	{
+		OpticalFlow_SINS.Pos_History[_ROLL][i]=OpticalFlow_SINS.Pos_History[_ROLL][i-1];
+		OpticalFlow_SINS.Pos_History[_PITCH][i]=OpticalFlow_SINS.Pos_History[_PITCH][i-1];
+		OpticalFlow_SINS.Vel_History[_ROLL][i]=OpticalFlow_SINS.Vel_History[_ROLL][i-1];
+		OpticalFlow_SINS.Vel_History[_PITCH][i]=OpticalFlow_SINS.Vel_History[_PITCH][i-1]; 		
+	}   
+	OpticalFlow_SINS.Pos_History[_ROLL][0]=OpticalFlow_SINS.Position[_ROLL];
+  OpticalFlow_SINS.Pos_History[_PITCH][0]=OpticalFlow_SINS.Position[_PITCH]; 
+  OpticalFlow_SINS.Vel_History[_ROLL][0]=OpticalFlow_SINS.Speed[_ROLL];
+  OpticalFlow_SINS.Vel_History[_PITCH][0]=OpticalFlow_SINS.Speed[_PITCH];  	 
 }
 
 

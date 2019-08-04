@@ -1,4 +1,36 @@
-
+/* Copyright (c)  2018-2025 Wuhan Nameless Innovation Technology Co.,Ltd. All rights reserved.*/
+/*----------------------------------------------------------------------------------------------------------------------/
+*               本程序只供购买者学习使用，版权著作权属于无名科创团队，无名科创团队将飞控程序源码提供给购买者，
+*               购买者要为无名科创团队提供保护，未经作者许可，不得将源代码提供给他人，不得将源代码放到网上供他人免费下载， 
+*               更不能以此销售牟利，如发现上述行为，无名科创团队将诉之以法律解决！！！
+-----------------------------------------------------------------------------------------------------------------------/
+*               生命不息、奋斗不止；前人栽树，后人乘凉！！！
+*               开源不易，且学且珍惜，祝早日逆袭、进阶成功！！！
+*               学习优秀者，简历可推荐到DJI、ZEROTECH、XAG、AEE、GDU、AUTEL、EWATT、HIGH GREAT等公司就业
+*               求职简历请发送：15671678205@163.com，需备注求职意向单位、岗位、待遇等
+*               无名科创开源飞控QQ群：540707961
+*               CSDN博客：http://blog.csdn.net/u011992534
+*               优酷ID：NamelessCotrun无名小哥
+*               B站教学视频：https://space.bilibili.com/67803559/#/video
+*               客户使用心得、改进意见征集贴：http://www.openedv.com/forum.php?mod=viewthread&tid=234214&extra=page=1
+*               淘宝店铺：https://shop348646912.taobao.com/?spm=2013.1.1000126.2.5ce78a88ht1sO2
+*               百度贴吧:无名科创开源飞控
+*               公司官网:www.nameless.tech
+*               修改日期:2019/4/12
+*               版本：躺赢者——CarryPilot_V1.0
+*               版权所有，盗版必究。
+*               Copyright(C) 2017-2025 武汉无名创新科技有限公司 
+*               All rights reserved
+*               重要提示：
+*               正常淘宝咸鱼转手的飞控、赠送朋友、传给学弟的都可以进售后群学习交流，
+*               不得直接在网上销售无名创新资料，无名创新代码有声明版权，他人不得将
+*               资料代码传网上供他人下载，不得以谋利为目的销售资料代码，发现有此操
+*               作者，公司会提前告知，请1天内及时处理，否则你的学校、单位、姓名、电
+*               话、地址信息会被贴出在公司官网、官方微信公众平台、官方技术博客、知乎
+*               专栏以及淘宝店铺首页予以公示公告，此种所作所为，会成为个人污点，影响
+*               升学、找工作、社会声誉、很快就很在无人机界出名，后果很严重。
+*               因此行为给公司造成重大损失者，会以法律途径解决，感谢您的合作，谢谢！！！
+----------------------------------------------------------------------------------------------------------------------*/
 #include "Headfile.h"
 #include "GPS.h"
 #include "Usart.h"
@@ -38,122 +70,122 @@ uint16_t GPS_Data_Offset=0;
 @作者：无名小哥
 @日期：2019年01月27日
 *************************************************************/
-//void GPS_PVT_Parse()
-//{
-//  Test_Period(&GPS_PVT_Parse_Time_Delta);//GPS数据解析周期测试
-//  Last_Longitude=Longitude;
-//  Last_Latitude=Latitude;
-//  
-//  Last_GPS_Vel.E=GPS_Vel.E;
-//  Last_GPS_Vel.N=GPS_Vel.N;
-//  Last_GPS_Vel.U=GPS_Vel.U;
-//  //北京时间
-//  TimeBeijing[0]=Ublox_Data[GPS_Data_Offset+8]+8;//时
-//  TimeBeijing[1]=Ublox_Data[GPS_Data_Offset+9];//分
-//  TimeBeijing[2]=Ublox_Data[GPS_Data_Offset+10];//秒
-//  
-//  GPS_FixType=Ublox_Data[GPS_Data_Offset+20];//定位类型
-//  
-//  GPS_Fix_Flag[0]=Ublox_Data[GPS_Data_Offset+21]&0x01;//是否有效定位
-//  GPS_Fix_Flag[1]=(Ublox_Data[GPS_Data_Offset+21]&0x02)>>1;//差分模式是否开启(DGPS)
-//  GPS_Fix_Flag[2]=(Ublox_Data[GPS_Data_Offset+21]&0x3A)>>2;//省电模式、未用
-//  GPS_Fix_Flag[3]=Ublox_Data[GPS_Data_Offset+21]&0x20;//航向是否有效
-//  Last_GPS_Sate_Num=GPS_Sate_Num;
-//  GPS_Sate_Num=Ublox_Data[GPS_Data_Offset+23];//参与定位卫星个数
-//  
-//  Longitude_Origion=Ublox_Data[GPS_Data_Offset+24]//经度*10^7
-//    +(Ublox_Data[GPS_Data_Offset+25]<<8)
-//      +(Ublox_Data[GPS_Data_Offset+26]<<16)
-//        +(Ublox_Data[GPS_Data_Offset+27]<<24);
-//  Longitude=Longitude_Origion*0.0000001f;//deg
-//  
-//  Latitude_Origion=Ublox_Data[GPS_Data_Offset+28]//纬度*10^7
-//    +(Ublox_Data[GPS_Data_Offset+29]<<8)
-//      +(Ublox_Data[GPS_Data_Offset+30]<<16)
-//        +(Ublox_Data[GPS_Data_Offset+31]<<24);
-//  Latitude=Latitude_Origion*0.0000001f;//deg
-//  
-//  
-//  Longitude_Deg=(int)(Longitude);//经纬度处理，用于OLED显示
-//  Longitude_Min=((int)((Longitude-Longitude_Deg)*10000000));
-//  Latitude_Deg=(int)(Latitude);
-//  Latitude_Min=((int)((Latitude-Latitude_Deg)*10000000));
-//  
-//  
-//  High_GPS=Ublox_Data[GPS_Data_Offset+36]//GPS获取海拔高度
-//    +(Ublox_Data[GPS_Data_Offset+37]<<8)
-//      +(Ublox_Data[GPS_Data_Offset+38]<<16)
-//        +(Ublox_Data[GPS_Data_Offset+39]<<24);
-//  High_GPS/=1000;//m
-//  
-//  
-//  Horizontal_Acc_Est=Ublox_Data[GPS_Data_Offset+40]//水平位置估计精度
-//    +(Ublox_Data[GPS_Data_Offset+41]<<8)
-//      +(Ublox_Data[GPS_Data_Offset+42]<<16)
-//        +(Ublox_Data[GPS_Data_Offset+43]<<24);
-//        Horizontal_Acc_Est*=0.01f;//m
-//        
-//        
-//        Vertical_Acc_Est=Ublox_Data[GPS_Data_Offset+44]//垂直位置估计精度
-//          +(Ublox_Data[GPS_Data_Offset+45]<<8)
-//            +(Ublox_Data[GPS_Data_Offset+46]<<16)
-//              +(Ublox_Data[GPS_Data_Offset+47]<<24);;
-//              Vertical_Acc_Est*=0.01f;//m
-//              
-//              
-//              GPS_Vel.N=Ublox_Data[GPS_Data_Offset+48]//GPS获取的沿导航系正北速度
-//                +(Ublox_Data[GPS_Data_Offset+49]<<8)
-//                  +(Ublox_Data[GPS_Data_Offset+50]<<16)
-//                    +(Ublox_Data[GPS_Data_Offset+51]<<24);
-//              GPS_Vel.N/=10;//cm/s  N
-//              
-//              
-//              GPS_Vel.E=Ublox_Data[GPS_Data_Offset+52]//GPS获取的沿导航系正东向速度
-//                +(Ublox_Data[GPS_Data_Offset+53]<<8)
-//                  +(Ublox_Data[GPS_Data_Offset+54]<<16)
-//                    +(Ublox_Data[GPS_Data_Offset+55]<<24);//mm/s
-//              GPS_Vel.E/=10;//cm/s  E
-//              
-//              
-//              GPS_Vel.U=Ublox_Data[GPS_Data_Offset+56]//GPS获取的沿导航系 '天' 向速度
-//                +(Ublox_Data[GPS_Data_Offset+56]<<8)
-//                  +(Ublox_Data[GPS_Data_Offset+58]<<16)
-//                    +(Ublox_Data[GPS_Data_Offset+59]<<24);
-//              GPS_Vel.U/=(-10);//cm/s  D
-//              
-//              GPS_Speed_Resolve[0]=GPS_Vel.N;//Y  Axis
-//              GPS_Speed_Resolve[1]=GPS_Vel.E;//X  Axis
-//              
-//              
-//              GPS_Ground_Speed=Ublox_Data[60]//载体对地速度
-//                +(Ublox_Data[GPS_Data_Offset+61]<<8)
-//                  +(Ublox_Data[GPS_Data_Offset+62]<<16)
-//                    +(Ublox_Data[GPS_Data_Offset+63]<<24);
-//              GPS_Ground_Speed/=10;//cm/s
-//              
-//              
-//              GPS_Yaw=Ublox_Data[GPS_Data_Offset+64]//载体运动航向角
-//                +(Ublox_Data[GPS_Data_Offset+65]<<8)
-//                  +(Ublox_Data[GPS_Data_Offset+66]<<16)
-//                    +(Ublox_Data[GPS_Data_Offset+67]<<24);
-//              GPS_Yaw*=0.00001f;//deg
-//              
-//              Speed_Acc_Est=Ublox_Data[GPS_Data_Offset+68]//速度估计精度
-//                +(Ublox_Data[GPS_Data_Offset+69]<<8)
-//                  +(Ublox_Data[GPS_Data_Offset+70]<<16)
-//                    +(Ublox_Data[GPS_Data_Offset+71]<<24);
-//              Speed_Acc_Est*=0.1f;//cm/s
-//              
-//              
-//              GPS_Pos_DOP=Ublox_Data[GPS_Data_Offset+76]
-//                +(Ublox_Data[GPS_Data_Offset+77]<<8);
-//              GPS_Pos_DOP*=0.01f;
-//              GPS_Quality=GPS_Pos_DOP;//位置精度因子
-//              
-//              GPS_Vel_Div.E=1000*(GPS_Vel.E-Last_GPS_Vel.E)/(GPS_PVT_Parse_Time_Delta.Time_Delta);//单位cm/s^2
-//              GPS_Vel_Div.N=1000*(GPS_Vel.N-Last_GPS_Vel.N)/(GPS_PVT_Parse_Time_Delta.Time_Delta);//单位cm/s^2
-//              GPS_Vel_Div.U=1000*(GPS_Vel.U-Last_GPS_Vel.U)/(GPS_PVT_Parse_Time_Delta.Time_Delta);//单位cm/s^2
-//}
+void GPS_PVT_Parse()
+{
+  Test_Period(&GPS_PVT_Parse_Time_Delta);//GPS数据解析周期测试
+  Last_Longitude=Longitude;
+  Last_Latitude=Latitude;
+  
+  Last_GPS_Vel.E=GPS_Vel.E;
+  Last_GPS_Vel.N=GPS_Vel.N;
+  Last_GPS_Vel.U=GPS_Vel.U;
+  //北京时间
+  TimeBeijing[0]=Ublox_Data[GPS_Data_Offset+8]+8;//时
+  TimeBeijing[1]=Ublox_Data[GPS_Data_Offset+9];//分
+  TimeBeijing[2]=Ublox_Data[GPS_Data_Offset+10];//秒
+  
+  GPS_FixType=Ublox_Data[GPS_Data_Offset+20];//定位类型
+  
+  GPS_Fix_Flag[0]=Ublox_Data[GPS_Data_Offset+21]&0x01;//是否有效定位
+  GPS_Fix_Flag[1]=(Ublox_Data[GPS_Data_Offset+21]&0x02)>>1;//差分模式是否开启(DGPS)
+  GPS_Fix_Flag[2]=(Ublox_Data[GPS_Data_Offset+21]&0x3A)>>2;//省电模式、未用
+  GPS_Fix_Flag[3]=Ublox_Data[GPS_Data_Offset+21]&0x20;//航向是否有效
+  Last_GPS_Sate_Num=GPS_Sate_Num;
+  GPS_Sate_Num=Ublox_Data[GPS_Data_Offset+23];//参与定位卫星个数
+  
+  Longitude_Origion=Ublox_Data[GPS_Data_Offset+24]//经度*10^7
+    +(Ublox_Data[GPS_Data_Offset+25]<<8)
+      +(Ublox_Data[GPS_Data_Offset+26]<<16)
+        +(Ublox_Data[GPS_Data_Offset+27]<<24);
+  Longitude=Longitude_Origion*0.0000001f;//deg
+  
+  Latitude_Origion=Ublox_Data[GPS_Data_Offset+28]//纬度*10^7
+    +(Ublox_Data[GPS_Data_Offset+29]<<8)
+      +(Ublox_Data[GPS_Data_Offset+30]<<16)
+        +(Ublox_Data[GPS_Data_Offset+31]<<24);
+  Latitude=Latitude_Origion*0.0000001f;//deg
+  
+  
+  Longitude_Deg=(int)(Longitude);//经纬度处理，用于OLED显示
+  Longitude_Min=((int)((Longitude-Longitude_Deg)*10000000));
+  Latitude_Deg=(int)(Latitude);
+  Latitude_Min=((int)((Latitude-Latitude_Deg)*10000000));
+  
+  
+  High_GPS=Ublox_Data[GPS_Data_Offset+36]//GPS获取海拔高度
+    +(Ublox_Data[GPS_Data_Offset+37]<<8)
+      +(Ublox_Data[GPS_Data_Offset+38]<<16)
+        +(Ublox_Data[GPS_Data_Offset+39]<<24);
+  High_GPS/=1000;//m
+  
+  
+  Horizontal_Acc_Est=Ublox_Data[GPS_Data_Offset+40]//水平位置估计精度
+    +(Ublox_Data[GPS_Data_Offset+41]<<8)
+      +(Ublox_Data[GPS_Data_Offset+42]<<16)
+        +(Ublox_Data[GPS_Data_Offset+43]<<24);
+        Horizontal_Acc_Est*=0.01f;//m
+        
+        
+        Vertical_Acc_Est=Ublox_Data[GPS_Data_Offset+44]//垂直位置估计精度
+          +(Ublox_Data[GPS_Data_Offset+45]<<8)
+            +(Ublox_Data[GPS_Data_Offset+46]<<16)
+              +(Ublox_Data[GPS_Data_Offset+47]<<24);;
+              Vertical_Acc_Est*=0.01f;//m
+              
+              
+              GPS_Vel.N=Ublox_Data[GPS_Data_Offset+48]//GPS获取的沿导航系正北速度
+                +(Ublox_Data[GPS_Data_Offset+49]<<8)
+                  +(Ublox_Data[GPS_Data_Offset+50]<<16)
+                    +(Ublox_Data[GPS_Data_Offset+51]<<24);
+              GPS_Vel.N/=10;//cm/s  N
+              
+              
+              GPS_Vel.E=Ublox_Data[GPS_Data_Offset+52]//GPS获取的沿导航系正东向速度
+                +(Ublox_Data[GPS_Data_Offset+53]<<8)
+                  +(Ublox_Data[GPS_Data_Offset+54]<<16)
+                    +(Ublox_Data[GPS_Data_Offset+55]<<24);//mm/s
+              GPS_Vel.E/=10;//cm/s  E
+              
+              
+              GPS_Vel.U=Ublox_Data[GPS_Data_Offset+56]//GPS获取的沿导航系 '天' 向速度
+                +(Ublox_Data[GPS_Data_Offset+56]<<8)
+                  +(Ublox_Data[GPS_Data_Offset+58]<<16)
+                    +(Ublox_Data[GPS_Data_Offset+59]<<24);
+              GPS_Vel.U/=(-10);//cm/s  D
+              
+              GPS_Speed_Resolve[0]=GPS_Vel.N;//Y  Axis
+              GPS_Speed_Resolve[1]=GPS_Vel.E;//X  Axis
+              
+              
+              GPS_Ground_Speed=Ublox_Data[60]//载体对地速度
+                +(Ublox_Data[GPS_Data_Offset+61]<<8)
+                  +(Ublox_Data[GPS_Data_Offset+62]<<16)
+                    +(Ublox_Data[GPS_Data_Offset+63]<<24);
+              GPS_Ground_Speed/=10;//cm/s
+              
+              
+              GPS_Yaw=Ublox_Data[GPS_Data_Offset+64]//载体运动航向角
+                +(Ublox_Data[GPS_Data_Offset+65]<<8)
+                  +(Ublox_Data[GPS_Data_Offset+66]<<16)
+                    +(Ublox_Data[GPS_Data_Offset+67]<<24);
+              GPS_Yaw*=0.00001f;//deg
+              
+              Speed_Acc_Est=Ublox_Data[GPS_Data_Offset+68]//速度估计精度
+                +(Ublox_Data[GPS_Data_Offset+69]<<8)
+                  +(Ublox_Data[GPS_Data_Offset+70]<<16)
+                    +(Ublox_Data[GPS_Data_Offset+71]<<24);
+              Speed_Acc_Est*=0.1f;//cm/s
+              
+              
+              GPS_Pos_DOP=Ublox_Data[GPS_Data_Offset+76]
+                +(Ublox_Data[GPS_Data_Offset+77]<<8);
+              GPS_Pos_DOP*=0.01f;
+              GPS_Quality=GPS_Pos_DOP;//位置精度因子
+              
+              GPS_Vel_Div.E=1000*(GPS_Vel.E-Last_GPS_Vel.E)/(GPS_PVT_Parse_Time_Delta.Time_Delta);//单位cm/s^2
+              GPS_Vel_Div.N=1000*(GPS_Vel.N-Last_GPS_Vel.N)/(GPS_PVT_Parse_Time_Delta.Time_Delta);//单位cm/s^2
+              GPS_Vel_Div.U=1000*(GPS_Vel.U-Last_GPS_Vel.U)/(GPS_PVT_Parse_Time_Delta.Time_Delta);//单位cm/s^2
+}
 
 
 /***********************************************************
@@ -164,26 +196,26 @@ uint16_t GPS_Data_Offset=0;
 @作者：无名小哥
 @日期：2019年01月27日
 *************************************************************/
-//void GPS_Data_Prase(void)
-//{
-//  static uint16_t gps_prase_cnt=0;
-//  gps_prase_cnt++;
-//  if(gps_prase_cnt>=WP_Duty_Freq/10)//100ms
-//  {
-//    if(COM2_Rx_Buf.Tail<99)//0-99数据位正在传输
-//    {
-//      GPS_Data_Offset=106;
-//    }
-//    else//100-199数据位正在传输
-//    {
-//      GPS_Data_Offset=6;
-//    }
-//    GPS_PVT_Parse();
-//    Set_GPS_Home();
-//    GPS_Update_Flag=1;
-//    gps_prase_cnt=0;
-//  }
-//}
+void GPS_Data_Prase(void)
+{
+  static uint16_t gps_prase_cnt=0;
+  gps_prase_cnt++;
+  if(gps_prase_cnt>=WP_Duty_Freq/10)//100ms
+  {
+    if(COM2_Rx_Buf.Tail<99)//0-99数据位正在传输
+    {
+      GPS_Data_Offset=106;
+    }
+    else//100-199数据位正在传输
+    {
+      GPS_Data_Offset=6;
+    }
+    GPS_PVT_Parse();
+    Set_GPS_Home();
+    GPS_Update_Flag=1;
+    gps_prase_cnt=0;
+  }
+}
 const uint8_t NEMA_Disable_Header[6]={0xB5,0x62,0x06,0x01,0x03,0x00};//
 const uint8_t NEMA_Disable_Buf[20][5]={
   0xF0,0x0A,0x00,0x04,0x23,
@@ -314,19 +346,19 @@ const unsigned long NCQ_Prase_Baud=921600;
 
 const unsigned long Baud_Poll[8]={9600,19200,38400,
 57600,115200,230400,460800,921600};
-//void Set_GPS_USART(void)
-//{
-//#ifdef  Ublox_Set_By_NamelessCotrunQuad
-//#ifdef Default_Baud_Is_Know
-//  Ublox_Set_Output_PVT_10hz_Baud_Set(Default_Baud_Is_Know);//以默认波特率设置一次即可
-//#else
-//  for(uint16_t i=0;i<8;i++)
-//  {
-//    Ublox_Set_Output_PVT_10hz_Baud_Set(Baud_Poll[i]);//未知波特率轮询设置
-//  }
-//#endif
-//#endif
-//}
+void Set_GPS_USART(void)
+{
+#ifdef  Ublox_Set_By_NamelessCotrunQuad
+#ifdef Default_Baud_Is_Know
+  Ublox_Set_Output_PVT_10hz_Baud_Set(Default_Baud_Is_Know);//以默认波特率设置一次即可
+#else
+  for(uint16_t i=0;i<8;i++)
+  {
+    Ublox_Set_Output_PVT_10hz_Baud_Set(Baud_Poll[i]);//未知波特率轮询设置
+  }
+#endif
+#endif
+}
 
 
 /***********************************************************
@@ -337,10 +369,10 @@ const unsigned long Baud_Poll[8]={9600,19200,38400,
 @作者：无名小哥
 @日期：2019年01月27日
 *************************************************************/
-//void USART2_Init(unsigned long bound)
-//{
-//  ConfigureUART2(bound);
-//}
+void USART2_Init(unsigned long bound)
+{
+  ConfigureUART2(bound);
+}
 
 /***********************************************************
 @函数名：Ublox_Set_Output_PVT_10hz_Baud_Set
@@ -350,76 +382,76 @@ const unsigned long Baud_Poll[8]={9600,19200,38400,
 @作者：无名小哥
 @日期：2019年01月27日
 *************************************************************/
-//void Ublox_Set_Output_PVT_10hz_Baud_Set(unsigned long Baud)
-//{
-//  uint16_t i=0,j=0;
-//  USART2_Init(Baud);
-//  for(i=0;i<20;i++)//禁掉所有NEMA输出语句
-//  {
-//    for(j=0;j<3;j++)
-//    {
-//      USART2_Send((unsigned char *)NEMA_Disable_Header,sizeof(NEMA_Disable_Header));
-//      USART2_Send((unsigned char *)NEMA_Disable_Buf[i],5);
-//    }
-//    //delay_ms(50);
-//  }
-//  delay_ms(10);
-//  for(i=0;i<61;i++)//禁掉所有ublox输出语句
-//  {
-//    for(j=0;j<3;j++)
-//    {
-//      USART2_Send((unsigned char *)Ublox_Disable_Header,sizeof(Ublox_Disable_Header));
-//      USART2_Send((unsigned char *)Ublox_Disable_Buf[i],5);
-//    }
-//    //delay_ms(10);
-//  }
-//  delay_ms(10);
-//  for(j=0;j<3;j++)
-//  {
-//    USART2_Send((unsigned char *)PVT_Enable_Buf,11);//打开PVT
-//    //delay_ms(5);
-//  }
-//  delay_ms(10);
-//  for(j=0;j<5;j++)
-//  {
-//    USART2_Send((unsigned char *)Output_Rate_10hz_2,14);//设置10hz刷新1
-//    USART2_Send((unsigned char *)Output_Rate_10hz_1,8);//设置10hz刷新2
-//    //delay_ms(10);
-//  }
-//  delay_ms(10);
-//  if(NCQ_Prase_Baud==921600)
-//  {
-//    for(j=0;j<5;j++)
-//    {
-//      USART2_Send((unsigned char *)Output_Baud_921600_2,28);
-//      USART2_Send((unsigned char *)Output_Baud_921600_1,9);
-//      //delay_ms(10);
-//    }
-//  }
-//  else if(NCQ_Prase_Baud==115200)
-//  {
-//    for(j=0;j<5;j++)
-//    {
-//      USART2_Send((unsigned char *)Output_Baud_115200_2,28);
-//      USART2_Send((unsigned char *)Output_Baud_115200_1,9);
-//      //delay_ms(10);
-//    }
-//  }
-//  else
-//  {
-//    for(j=0;j<5;j++)
-//    {
-//      USART2_Send((unsigned char *)Output_Baud_38400_2,28);
-//      USART2_Send((unsigned char *)Output_Baud_38400_1,9);
-//      //delay_ms(10);
-//    }
-//  }
-//  USART2_Init(NCQ_Prase_Baud);
-//  delay_ms(10);
-//  for(j=0;j<5;j++)
-//  {
-//    USART2_Send((unsigned char *)GPS_Save_Config,21);
-//    //delay_ms(10);
-//  }
-//}
+void Ublox_Set_Output_PVT_10hz_Baud_Set(unsigned long Baud)
+{
+  uint16_t i=0,j=0;
+  USART2_Init(Baud);
+  for(i=0;i<20;i++)//禁掉所有NEMA输出语句
+  {
+    for(j=0;j<3;j++)
+    {
+      USART2_Send((unsigned char *)NEMA_Disable_Header,sizeof(NEMA_Disable_Header));
+      USART2_Send((unsigned char *)NEMA_Disable_Buf[i],5);
+    }
+    //delay_ms(50);
+  }
+  delay_ms(10);
+  for(i=0;i<61;i++)//禁掉所有ublox输出语句
+  {
+    for(j=0;j<3;j++)
+    {
+      USART2_Send((unsigned char *)Ublox_Disable_Header,sizeof(Ublox_Disable_Header));
+      USART2_Send((unsigned char *)Ublox_Disable_Buf[i],5);
+    }
+    //delay_ms(10);
+  }
+  delay_ms(10);
+  for(j=0;j<3;j++)
+  {
+    USART2_Send((unsigned char *)PVT_Enable_Buf,11);//打开PVT
+    //delay_ms(5);
+  }
+  delay_ms(10);
+  for(j=0;j<5;j++)
+  {
+    USART2_Send((unsigned char *)Output_Rate_10hz_2,14);//设置10hz刷新1
+    USART2_Send((unsigned char *)Output_Rate_10hz_1,8);//设置10hz刷新2
+    //delay_ms(10);
+  }
+  delay_ms(10);
+  if(NCQ_Prase_Baud==921600)
+  {
+    for(j=0;j<5;j++)
+    {
+      USART2_Send((unsigned char *)Output_Baud_921600_2,28);
+      USART2_Send((unsigned char *)Output_Baud_921600_1,9);
+      //delay_ms(10);
+    }
+  }
+  else if(NCQ_Prase_Baud==115200)
+  {
+    for(j=0;j<5;j++)
+    {
+      USART2_Send((unsigned char *)Output_Baud_115200_2,28);
+      USART2_Send((unsigned char *)Output_Baud_115200_1,9);
+      //delay_ms(10);
+    }
+  }
+  else
+  {
+    for(j=0;j<5;j++)
+    {
+      USART2_Send((unsigned char *)Output_Baud_38400_2,28);
+      USART2_Send((unsigned char *)Output_Baud_38400_1,9);
+      //delay_ms(10);
+    }
+  }
+  USART2_Init(NCQ_Prase_Baud);
+  delay_ms(10);
+  for(j=0;j<5;j++)
+  {
+    USART2_Send((unsigned char *)GPS_Save_Config,21);
+    //delay_ms(10);
+  }
+}
 
