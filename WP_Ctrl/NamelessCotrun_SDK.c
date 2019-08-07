@@ -2,6 +2,7 @@
 #include "NamelessCotrun_SDK.h"
 
 float SDK_trust_cnt=0;
+float SDK_time_cnt=0;
 
 uint8_t Start_Turnung_Flag=0;
 
@@ -362,8 +363,9 @@ uint8_t move_with_openmv_speed(float x_target,float y_target,float delta,uint8_t
 			SDK_trust_cnt=0;
 			SDK_DT_Send_Check(OpenMv_Mode);
     } 
-    if(dt.Now_Time>end_time|| (SDK_trust_cnt>=5&&(end_time-dt.Now_Time<0.6f*delta)))
+    if(dt.Now_Time>end_time||SDK_trust_cnt>=5)
     {
+			SDK_time_cnt=dt.Now_Time;//记录当前前进时间
       Status->Status[number].Execute_Flag=1;
       Status->Status[number].End_flag=1;
       OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
@@ -391,7 +393,7 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
 {
 	static float end_time=0;
   Testime dt;
-
+//	static int take_flag=0;
   Test_Period(&dt);
   ncq_control_althold();//高度控制依然进行
   if(Status->Status[number].Start_Flag==1
@@ -405,16 +407,6 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
   {
     if(Status->Status[number].Start_Flag==0)//openmv任务切换，防冲突，只执行一次
     {
-//      if(SDK_Mode_Set!=0x03)//下视openmv任务切换
-//      {
-//        SDK_DT_Send_Check(SDK_Mode_Set);//改变下视openmv任务
-//        SDK_DT_Send_Check_Front(WAIT_MODE);//前视openmv进入空模式，防止冲突
-//      }
-//      else
-//      {
-//        SDK_DT_Send_Check_Front(REC_MODE);//前视openmv进入矩形检测任务
-//        SDK_DT_Send_Check(WAIT_MODE);//下视openmv进入空模式，防止冲突
-//      }
       SDK_DT_Send_Check(OpenMv_Mode);
 			end_time=dt.Now_Time+delta;//单位ms 
       Status->Status[number].Start_Flag=1;
@@ -425,6 +417,7 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
     } 
     if(dt.Now_Time>end_time)
     {
+			SDK_time_cnt=0;//两个配套任务完成之后临时计时器清零
       Status->Status[number].Execute_Flag=1;
       Status->Status[number].End_flag=1;
       OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
@@ -437,7 +430,9 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
     else
     { 
       Status->Status[number].Execute_Flag=1;
-      OpticalFlow_Control(0);//普通光流模式、无线数传与OPENMV参与的SDK模式
+      OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
       ncq_control_althold();//高度控制
       return 0;
     }
@@ -445,21 +440,22 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
 }
 
 
-#define NCQ_SDK_DUTY_MAX   13
+#define NCQ_SDK_DUTY_MAX   6
 
-#define NCQ_SDK_DUTY1 move_with_z_target(120,0,0,&SDK_Duty_Status,1-1)
-#define NCQ_SDK_DUTY2 move_with_openmv_speed(0,20,7000,RGB_MODE,&SDK_Duty_Status,2-1)
-#define NCQ_SDK_DUTY3 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,3-1)
-#define NCQ_SDK_DUTY4 move_with_openmv_speed(0,20,5500,RGB_MODE,&SDK_Duty_Status,4-1)
-#define NCQ_SDK_DUTY5 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,5-1)
-#define NCQ_SDK_DUTY6 move_with_openmv_speed(20,0,12000,RGB_MODE,&SDK_Duty_Status,6-1)
-#define NCQ_SDK_DUTY7 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,7-1)
-#define NCQ_SDK_DUTY8 move_with_openmv_speed(0,-20,7000,RGB_MODE,&SDK_Duty_Status,8-1)
-#define NCQ_SDK_DUTY9 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,9-1)
-#define NCQ_SDK_DUTY10 move_with_speed_target(0,-20,7000,&SDK_Duty_Status,10-1)
-#define NCQ_SDK_DUTY11 Turning_Right(90,&SDK_Duty_Status,11-1)
-#define NCQ_SDK_DUTY12 move_with_openmv_speed(0,20,12000,CIRCLE_MODE,&SDK_Duty_Status,12-1)
-#define NCQ_SDK_DUTY13 move_with_z_target(-140,0,0,&SDK_Duty_Status,13-1)
+#define NCQ_SDK_DUTY1 move_with_z_target(120,0,0,&SDK_Duty_Status,1-1)//起飞120cm
+#define NCQ_SDK_DUTY2 move_with_openmv_speed(0,20,10000,POINT_MODE,&SDK_Duty_Status,2-1)//前飞寻找黄色色块条形码
+#define NCQ_SDK_DUTY3 move_with_openmv_time(15000,TAKE_MODE,&SDK_Duty_Status,3-1)//停留声光拍照,且只前进3m
+#define NCQ_SDK_DUTY4 move_with_openmv_speed(0,20,5500,STICK_MODE,&SDK_Duty_Status,4-1)//前飞寻找杆
+#define NCQ_SDK_DUTY5 move_with_openmv_time(15000,TAKE_MODE,&SDK_Duty_Status,5-1)//停留二维码拍照
+#define NCQ_SDK_DUTY6 move_with_z_target(-140,0,0,&SDK_Duty_Status,6-1)//降落
+
+//#define NCQ_SDK_DUTY6 move_with_openmv_speed(20,0,12000,RGB_MODE,&SDK_Duty_Status,6-1)
+//#define NCQ_SDK_DUTY7 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,7-1)
+//#define NCQ_SDK_DUTY8 move_with_openmv_speed(0,-20,7000,RGB_MODE,&SDK_Duty_Status,8-1)
+//#define NCQ_SDK_DUTY9 move_with_openmv_time(10000,RGB_MODE,&SDK_Duty_Status,9-1)
+//#define NCQ_SDK_DUTY10 move_with_speed_target(0,-20,7000,&SDK_Duty_Status,10-1)
+//#define NCQ_SDK_DUTY11 Turning_Right(90,&SDK_Duty_Status,11-1)
+//#define NCQ_SDK_DUTY12 move_with_openmv_speed(0,20,12000,CIRCLE_MODE,&SDK_Duty_Status,12-1)
 
 
 
@@ -485,13 +481,13 @@ void NCQ_SDK_Run(void)
   else if(SDK_Duty_Cnt==3)   NCQ_SDK_DUTY4;
   else if(SDK_Duty_Cnt==4)   NCQ_SDK_DUTY5;
   else if(SDK_Duty_Cnt==5)   NCQ_SDK_DUTY6;
-  else if(SDK_Duty_Cnt==6)   NCQ_SDK_DUTY7;
-	else if(SDK_Duty_Cnt==7)   NCQ_SDK_DUTY8;
-	else if(SDK_Duty_Cnt==8)   NCQ_SDK_DUTY9;
-	else if(SDK_Duty_Cnt==9)   NCQ_SDK_DUTY10;
-	else if(SDK_Duty_Cnt==10)  NCQ_SDK_DUTY11;
-	else if(SDK_Duty_Cnt==11)   NCQ_SDK_DUTY12;
-	else if(SDK_Duty_Cnt==12)   NCQ_SDK_DUTY13;
+//  else if(SDK_Duty_Cnt==6)   NCQ_SDK_DUTY7;
+//	else if(SDK_Duty_Cnt==7)   NCQ_SDK_DUTY8;
+//	else if(SDK_Duty_Cnt==8)   NCQ_SDK_DUTY9;
+//	else if(SDK_Duty_Cnt==9)   NCQ_SDK_DUTY10;
+//	else if(SDK_Duty_Cnt==10)  NCQ_SDK_DUTY11;
+//	else if(SDK_Duty_Cnt==11)   NCQ_SDK_DUTY12;
+//	else if(SDK_Duty_Cnt==12)   NCQ_SDK_DUTY13;
 	
 	
   else
@@ -589,16 +585,17 @@ void SDK_DT_Send_Check(unsigned char mode)
 }
 
 uint8_t SDK_Now_Mode=0x00;
-uint8_t SDK_Mode_Set=0x0F;
+uint8_t SDK_Mode_Set=WAIT_MODE;
 #define SDK_TARGET_X_OFFSET  0
 #define SDK_TARGET_Y_OFFSET  0//-12
 Line  SDK_Line;
 Point SDK_Point;
+Stick	SDK_Stick;
 uint8_t SDK_Recieve_Flag=0;
 Vector2f SDK_Target,SDK_Target_Offset;
 float SDK_Target_Yaw_Gyro=0;
 #define  Pixel_Size    0.0024//QQQVGA为0.0048，QQVGA为0.0024，单位为cm
-#define  Focal_Length  0.42
+#define  Focal_Length  0.28
 
 void SDK_Line_DT_Reset()
 {
@@ -621,6 +618,14 @@ void SDK_Point_DT_Reset()
   SDK_Point.y=0;
   SDK_Point.Pixel=0;
   SDK_Point.flag=0;
+}
+void SDK_Stick_DT_Reset()
+{
+	SDK_Stick.x=0;
+	SDK_Stick.y=0;
+	SDK_Stick.flag=0;
+	SDK_Stick.trust_Cnt=0;
+	SDK_Stick.trust_flag=0;
 }
 void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
 {
@@ -658,6 +663,33 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
     }
     
     SDK_Point_DT_Reset();
+  }
+	else if(*(data_buf+2)==0XF3)//杆检测
+  {
+    SDK_Now_Mode=0x03;
+    SDK_Stick.x=*(data_buf+4)<<8|*(data_buf+5);
+    SDK_Stick.y=*(data_buf+6)<<8|*(data_buf+7);
+    SDK_Stick.flag=*(data_buf+8);
+    
+    if(SDK_Stick.flag!=0)  
+    {
+      if(SDK_Stick.trust_Cnt<=20)	 SDK_Stick.trust_Cnt++;
+    }
+    else SDK_Stick.trust_Cnt/=2;
+    
+    if(SDK_Stick.trust_Cnt>=10)   SDK_Stick.trust_flag=1; 
+    else SDK_Stick.trust_flag=0;
+    
+    SDK_Recieve_Flag=1;
+    
+//    SDK_Target_Offset.x=SDK_TARGET_X_OFFSET;
+    SDK_Target_Offset.y=SDK_TARGET_Y_OFFSET;
+    
+//    SDK_Target.x=(Pixel_Size*(80-SDK_Point.x)*NamelessQuad.Position[_YAW])/Focal_Length
+//      +NamelessQuad.Position[_YAW]*tan(Roll* DEG2RAD)-SDK_Target_Offset.x;
+    SDK_Target.y=(Pixel_Size*(120-SDK_Stick.x)*30)
+      +NamelessQuad.Position[_YAW]*tan(Pitch* DEG2RAD)-SDK_Target_Offset.y;  
+    SDK_Line_DT_Reset(); 
   }
   else if(*(data_buf+2)==0XF1||*(data_buf+2)==0XF4||*(data_buf+2)==0XF5)//点检测 RGB 圆
   {
@@ -789,6 +821,7 @@ void SDK_Init(void)
 //  float sdk_mode_default=0;
   SDK_Line_DT_Reset();//复位SDK线检测数据
   SDK_Point_DT_Reset();//复位SDK点检测数据
+	SDK_Stick_DT_Reset();
 //  ReadFlashParameterOne(SDK_MODE_DEFAULT,&sdk_mode_default);
 //  if(isnan(sdk_mode_default)==0)
 //  {

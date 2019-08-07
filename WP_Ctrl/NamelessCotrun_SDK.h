@@ -60,6 +60,15 @@ typedef struct
   uint8_t line_ctrl_enable;
 }Line;//Ïß¼ì²â
 
+typedef struct
+{
+  int16_t x;
+  int16_t y; 
+  uint8_t flag;
+	uint16_t trust_Cnt;
+	uint8_t trust_flag;
+}Stick;//¸Ë¼ì²â
+
 extern uint8_t SDK_Mode_Set,SDK_Now_Mode,Start_Turnung_Flag;
 extern Line  SDK_Line;
 extern Point SDK_Point;
@@ -87,9 +96,12 @@ void SDK_Data_Receive_Prepare(u8 data);
 
 #define POINT_MODE  0x01
 #define LINE_MODE   0x02
-#define REC_MODE    0x03
-#define CIRCLE_MODE 0x04
-#define RGB_MODE    0x05
+#define STICK_MODE	0x03
+#define QR_MODE			0x04
+#define TAKE_MODE		0x05
+//#define REC_MODE    0x03
+//#define CIRCLE_MODE 0x04
+//#define RGB_MODE    0x05
 #define WAIT_MODE   0x0F
 
 #define MODE_OFFSET 0xF0
