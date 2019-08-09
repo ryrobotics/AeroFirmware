@@ -53,7 +53,7 @@ int main(void)
     Key_Scan(Key_Right_Release);//按键扫描
     QuadShow();//OLED显示
     Vcan_Send();//山外地面站（多功能调试助手）
-    ANO_SEND_StateMachine();//ANO地面站发送
+//    ANO_SEND_StateMachine();//ANO地面站发送
     Accel_Calibartion();//加速度计6面校准
     Mag_Calibartion_LS(&WP_Sensor.mag_raw,Circle_Angle);//磁力计椭球校准
     RC_Calibration_Check(PPM_Databuf);//遥控器行程校准

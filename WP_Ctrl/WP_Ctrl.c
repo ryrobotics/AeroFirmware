@@ -119,7 +119,7 @@ void Controler_Mode_Select()
   }
   
   
-  if(Reserve_Mode_Fast_Exchange_Flag==1)//目的是快速起飞	
+  if(Reserve_Mode_Fast_Exchange_Flag==1||take_off_flag==1)//目的是快速起飞	
   {
     Total_Controller.High_Acce_Control.Scale_Kp=1.0f;
     Total_Controller.High_Acce_Control.Scale_Ki=1.2f; 
@@ -130,6 +130,7 @@ void Controler_Mode_Select()
     if(Total_Controller.High_Position_Control.Expect<=NamelessQuad.Position[_YAW])//反馈高度大于期望高度，即恢复正常
     {
       Reserve_Mode_Fast_Exchange_Flag=0;   
+			take_off_flag=0;
     }	
   }
   else 
