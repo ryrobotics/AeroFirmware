@@ -1177,7 +1177,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=sqrt(NamelessQuad.Speed[_PITCH]*NamelessQuad.Speed[_PITCH]+NamelessQuad.Speed[_ROLL]*NamelessQuad.Speed[_ROLL]);
   DataBuf[6]=0;
   DataBuf[7]=NamelessQuad.Position[_YAW];//惯导高度
-  
+  */
 	DataBuf[0]=SDK_Tof.angle;
   DataBuf[1]=SDK_Tof.length;
   DataBuf[2]=SDK_Tof.RollLength;
@@ -1186,7 +1186,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=0;
   DataBuf[6]=0;
   DataBuf[7]=0;
-	*/
+	
 	
   wust_sendware((unsigned char *)DataBuf,sizeof(DataBuf));
 }

@@ -95,7 +95,7 @@ void Controler_Mode_Select()
     OpticalFlow_SINS_Reset();
     OpticalFlow_Ctrl_Reset();
 		
-//		SDK_Tof_Reset();//ÉÏËøÖØÖÃtofÉ¨Ãè
+		SDK_Tof_Reset();//ÉÏËøÖØÖÃtofÉ¨Ãè
   }
   
   if(Reserve_Mode_Cnt>=1) Reserve_Mode_Cnt--;

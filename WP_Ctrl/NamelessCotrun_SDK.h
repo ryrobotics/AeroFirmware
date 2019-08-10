@@ -92,6 +92,16 @@ typedef struct
   uint8_t line_ctrl_enable;
 }Line;//Ïß¼ì²â
 
+typedef struct
+{
+  int16_t length;
+  int16_t angle;
+	int16_t RollLength;
+	uint8_t flag;
+	float 	vel;
+	float		time;
+}Tof;//Tof¼ì²â
+
 extern uint8_t SDK_Mode_Set,SDK_Now_Mode;
 extern Line  SDK_Line;
 extern Point SDK_Point;
@@ -108,6 +118,8 @@ uint8_t move_with_z_target(float z_target,float z_vel,float delta,SDK_Status *St
 uint8_t move_with_openmv_speed(float x_target,float y_target,float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number);
 uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number);
 uint8_t take_off(float z_target,SDK_Status *Status,uint16_t number);
+uint8_t tof_scan(float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number);
+void SDK_Tof_Reset(void);
 
 void NCQ_SDK_Run(void);
 uint8_t NCQ_SDK_Circle(void);
@@ -122,12 +134,12 @@ void SDK_Data_Prase_Right(void);
 void SDK_Data_Receive_Prepare_Right(u8 data);
 
 extern uint8_t take_off_flag;
+extern Tof	SDK_Tof;
 
-#define POINT_MODE  0x01	//É«¿é
-#define QR_MODE     0x02	//¶þÎ¬Âë
-#define STICK_MODE  0x03	//¸Ë
-#define TOF_MODE 		0x04	//tof
-//#define RGB_MODE    0x05
+#define TOF_MODE 		0x01	//tof-A¸Ë
+#define POINT_MODE  0x02	//É¨»Æ
+#define QR_MODE     0x03	//¶þÎ¬Âë-B¸Ë
+#define TAKE_MODE  	0x04	//¸Ë
 #define WAIT_MODE   0x0F
 
 #define MODE_OFFSET 0xF0

@@ -38,6 +38,7 @@ float SDK_trust_cnt=0;
 float SDK_time_cnt=0;
 float	start_time=0;
 uint8_t take_off_flag=0;
+Tof	SDK_Tof;
 
 bool auto_altland(float taret_climb_rate,float target_climb_alt)
 {
@@ -442,6 +443,56 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
 }
 
 
+uint8_t tof_scan(float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number)
+{
+	static float end_time=0;
+  Testime dt;
+
+  Test_Period(&dt);
+  ncq_control_althold();//高度控制依然进行
+  if(Status->Status[number].Start_Flag==1
+     &&Status->Status[number].Execute_Flag==1
+       &&Status->Status[number].End_flag==1)
+  {
+    OpticalFlow_Control_Pure(0);//完成之后，进行光流悬停
+    return 1;
+  }
+  else
+  {
+    if(Status->Status[number].Start_Flag==0)
+    {
+      SDK_DT_Send_Check(OpenMv_Mode);
+			end_time=dt.Now_Time+delta;//单位ms 
+      Status->Status[number].Start_Flag=1;
+      
+      Unwanted_Lock_Flag=1;//不允许自动上锁
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+    } 
+    if(dt.Now_Time>end_time||SDK_Tof.flag==1)
+    {
+			SDK_time_cnt=0;//任务完成后临时计时器清零
+      Status->Status[number].Execute_Flag=1;
+      Status->Status[number].End_flag=1;
+      OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+      end_time=0;
+			SDK_DT_Send_Check(0x0F);//初始化opemmv工作模式，默认以上次工作状态配置
+      Status->Transition_Time[number]=100;//100*5ms=0.5s
+      return 1;//返回完成
+    }
+    else
+    { 
+      Status->Status[number].Execute_Flag=1;
+      OpticalFlow_Control_Pure(1);//完成之后，进行光流悬停
+      OpticalFlow_Pos_Ctrl_Expect.x=0;
+      OpticalFlow_Pos_Ctrl_Expect.y=0;
+      ncq_control_althold();//高度控制
+      return 0;
+    }
+  }
+}
 //#define NCQ_SDK_DUTY1 move_with_speed_target(10,0,2000 ,&SDK_Duty_Status,1-1)//左
 //#define NCQ_SDK_DUTY2 move_with_speed_target(0,10,2000 ,&SDK_Duty_Status,2-1)//前
 //#define NCQ_SDK_DUTY3 move_with_speed_target(-10,0,2000,&SDK_Duty_Status,3-1)//右
@@ -453,12 +504,12 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
 //#define NCQ_SDK_DUTY2 move_with_openmv_speed(0,10,30000,POINT_MODE,&SDK_Duty_Status,2-1)
 //#define NCQ_SDK_DUTY3 move_with_z_target(-120,0,0,&SDK_Duty_Status,3-1)
 
-#define NCQ_SDK_DUTY1	take_off(75,&SDK_Duty_Status,1-1)
-#define NCQ_SDK_DUTY2 move_with_openmv_speed(0,10,1*30000,POINT_MODE,&SDK_Duty_Status,2-1)
-#define NCQ_SDK_DUTY3 move_with_speed_target(0,10,1*(30000-SDK_time_cnt),&SDK_Duty_Status,3-1)
-#define NCQ_SDK_DUTY4 move_with_speed_target(10,0,1*8000,&SDK_Duty_Status,4-1)
-#define NCQ_SDK_DUTY5 move_with_speed_target(0,-10,1*30000,&SDK_Duty_Status,5-1)
-#define NCQ_SDK_DUTY6 move_with_z_target(-95,0,0,&SDK_Duty_Status,6-1)
+//#define NCQ_SDK_DUTY1	take_off(75,&SDK_Duty_Status,1-1)
+//#define NCQ_SDK_DUTY2 move_with_openmv_speed(0,10,1*30000,POINT_MODE,&SDK_Duty_Status,2-1)
+//#define NCQ_SDK_DUTY3 move_with_speed_target(0,10,1*(30000-SDK_time_cnt),&SDK_Duty_Status,3-1)
+//#define NCQ_SDK_DUTY4 move_with_speed_target(10,0,1*8000,&SDK_Duty_Status,4-1)
+//#define NCQ_SDK_DUTY5 move_with_speed_target(0,-10,1*30000,&SDK_Duty_Status,5-1)
+//#define NCQ_SDK_DUTY6 move_with_z_target(-95,0,0,&SDK_Duty_Status,6-1)
 
 //#define NCQ_SDK_DUTY3 move_with_openmv_speed(0,10,40000-SDK_time_cnt,QR_MODE,&SDK_Duty_Status,3-1)
 //#define NCQ_SDK_DUTY4 move_with_speed_target(0,10,1000,&SDK_Duty_Status,4-1)
@@ -467,6 +518,11 @@ uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status
 //#define NCQ_SDK_DUTY7 move_with_openmv_speed(0,-10,40000-SDK_time_cnt,QR_MODE,&SDK_Duty_Status,7-1)
 //#define NCQ_SDK_DUTY8 move_with_z_target(-110,0,0,&SDK_Duty_Status,8-1)
 
+#define NCQ_SDK_DUTY1 tof_scan(10000,TOF_MODE,&SDK_Duty_Status,1-1)
+#define NCQ_SDK_DUTY2 move_with_z_target(120,0,0,&SDK_Duty_Status,2-1)
+#define NCQ_SDK_DUTY3	move_with_speed_target(SDK_Tof.vel,0,SDK_Tof.time,&SDK_Duty_Status,3-1)//右
+#define NCQ_SDK_DUTY4 move_with_openmv_speed(0,10,30000,POINT_MODE,&SDK_Duty_Status,4-1)
+#define NCQ_SDK_DUTY5 move_with_z_target(-120,0,0,&SDK_Duty_Status,5-1)
 
 SDK_Status SDK_Duty_Status;
 uint16_t SDK_Duty_Cnt=0;
@@ -489,7 +545,7 @@ void NCQ_SDK_Run(void)
   else if(SDK_Duty_Cnt==2)   NCQ_SDK_DUTY3;
   else if(SDK_Duty_Cnt==3)   NCQ_SDK_DUTY4;
   else if(SDK_Duty_Cnt==4)   NCQ_SDK_DUTY5;
-  else if(SDK_Duty_Cnt==5)   NCQ_SDK_DUTY6;
+//  else if(SDK_Duty_Cnt==5)   NCQ_SDK_DUTY6;
   //else if(SDK_Duty_Cnt==6)   NCQ_SDK_DUTY7;
   else
   {
@@ -649,6 +705,12 @@ void SDK_Code_Reset()
 	SDK_Code.data=0;
 	SDK_Code.flag=0;
 }
+void SDK_Tof_Reset()
+{
+	SDK_Tof.angle=0;
+	SDK_Tof.flag=0;
+	SDK_Tof.length=0;
+}
 void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
 {
   //u8 sum = 0;
@@ -724,6 +786,38 @@ void Openmv_Data_Receive_Anl(u8 *data_buf,u8 num)
 			SDK_trust_cnt=6;
 		}
     SDK_Recieve_Flag=1;
+  }
+	else if(*(data_buf+2)==TOF_MODE+MODE_OFFSET)//Tof检测
+  {
+    SDK_Now_Mode=TOF_MODE;
+    SDK_Tof.length=*(data_buf+4)<<8|*(data_buf+5);
+    SDK_Tof.angle=*(data_buf+6)<<8|*(data_buf+7);
+    SDK_Tof.flag=*(data_buf+10);
+    
+		if(SDK_Tof.flag==0)
+		{
+			SDK_Tof.RollLength=-1;
+		}
+		else
+		{
+			if(SDK_Tof.angle<=90)	
+			{
+				SDK_Tof.RollLength=ABS(SDK_Tof.length*FastCos(SDK_Tof.angle*DEG2RAD)+450);
+				SDK_Tof.vel=-10;
+				SDK_Tof.time=SDK_Tof.RollLength/100;
+			}
+			else if((SDK_Tof.angle>=90)&&(SDK_Tof.angle<=180))
+			{
+				SDK_Tof.RollLength=ABS(SDK_Tof.length*FastCos(SDK_Tof.angle*DEG2RAD));
+				SDK_Tof.vel=10;
+				SDK_Tof.time=SDK_Tof.RollLength/100;
+			}
+		}
+		
+    SDK_Recieve_Flag=1;
+
+    SDK_Point_DT_Reset();
+		SDK_Code_Reset();
   }
   //串口数传SDK模式
   else if(*(data_buf+2)==0X01)//高度位置控制
@@ -891,6 +985,7 @@ void SDK_Init(void)
 		SDK_Line_DT_Reset();//复位SDK线检测数据
 		SDK_Point_DT_Reset();//复位SDK点检测数据
 		SDK_Code_Reset();//复位SDK二维码检测数据
+		SDK_Tof_Reset();//复位SDKtof检测数据
 //  ReadFlashParameterOne(SDK_MODE_DEFAULT,&sdk_mode_default);
 //  if(isnan(sdk_mode_default)==0)
 //  {
