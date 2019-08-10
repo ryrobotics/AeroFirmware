@@ -122,10 +122,10 @@ void wust_sendware(unsigned char *wareaddr, int16_t waresize)//山外发送波形
 @入口参数：无
 @出口参数：无
 功能描述：串口1数据接收
-@作者：无名小哥
+@作者：RayWong
 @日期：2019年01月27日
 *************************************************************/
-void UART1_IRQHandler(void)//UART1中断函数
+/*void UART1_IRQHandler(void)//UART1中断函数
 {				
   uint32_t flag = UARTIntStatus(UART1_BASE,1);//获取中断标志 原始中断状态 屏蔽中断标志	
   UARTIntClear(UART1_BASE,flag);//清除中断标志	
@@ -134,8 +134,17 @@ void UART1_IRQHandler(void)//UART1中断函数
     //RingBuf_Write(UARTCharGet(UART1_BASE),&COM1_Rx_Buf,50);//往环形队列里面写数据	
     ANO_DT_Data_Receive_Prepare(UARTCharGet(UART1_BASE)); 		
   }
+}*/
+void UART1_IRQHandler(void)
+{		
+  uint32_t flag = UARTIntStatus(UART1_BASE,1);//获取中断标志 原始中断状态 屏蔽中断标志		
+  UARTIntClear(UART1_BASE,flag);//清除中断标志			
+  while(UARTCharsAvail(UART1_BASE))//判断FIFO是否还有数据		
+  {			
+    RingBuf_Write(UARTCharGet(UART1_BASE),&COM1_Rx_Buf,24);//往环形队列里面写数据
+    //SDK_Data_Receive_Prepare(UARTCharGet(UART3_BASE));		
+  }
 }
-
 
 /***********************************************************
 @函数名：USART1_Send
@@ -157,7 +166,7 @@ void USART1_Send(uint8_t *pui8Buffer, uint32_t ui32Count)//发送N个字节长度的数据
 @入口参数：无
 @出口参数：无
 功能描述：串口1配置
-@作者：无名小哥
+@作者：RayWong
 @日期：2019年01月27日
 *************************************************************/
 void ConfigureUART1(void)//串口1初始化
@@ -167,8 +176,10 @@ void ConfigureUART1(void)//串口1初始化
   GPIOPinConfigure(GPIO_PB0_U1RX);//GPIO模式配置 PB0--RX PB1--TX 
   GPIOPinConfigure(GPIO_PB1_U1TX);
   GPIOPinTypeUART(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1);//GPIO的UART模式配置
-  UARTClockSourceSet(UART1_BASE, UART_CLOCK_PIOSC);
-  UARTStdioConfig(1, 115200, 16000000);
+//  UARTClockSourceSet(UART1_BASE, UART_CLOCK_PIOSC);
+	UARTConfigSetExpClk(UART1_BASE, SysCtlClockGet(), 115200,
+										(UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
+										 UART_CONFIG_PAR_NONE));
   UARTFIFODisable(UART1_BASE);//使能UART1中断	
   UARTIntEnable(UART1_BASE,UART_INT_RX);//使能UART1接收中断		
   UARTIntRegister(UART1_BASE,UART1_IRQHandler);//UART1中断地址注册	
@@ -470,19 +481,20 @@ void ConfigureUART7(void)//串口7初始化
 }
 
 /***********************************************************/
+/*
 uint8_t data_to_send[50];//ANO地面站发送数据缓冲
 uint8_t ANO_Send_PID_Flag[6]={0};//PID发送标志位
 #define vs16 int16_t
 #define vs32 int32_t
 #define s16  int16_t
-/***********************************************************
+***********************************************************
 @函数名：ANO_DT_Data_Receive_Prepare
 @入口参数：u8 data
 @出口参数：无
 功能描述：匿名地面站单个数据解析
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_DT_Data_Receive_Prepare(u8 data)//ANO地面站数据解析
 {
   static u8 RxBuffer[50];
@@ -526,14 +538,14 @@ void ANO_DT_Data_Receive_Prepare(u8 data)//ANO地面站数据解析
   else state = 0;
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_DT_Send_Check
 @入口参数：无
 @出口参数：无
 功能描述：匿名地面站和校验函数
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 static void ANO_DT_Send_Check(u8 head, u8 check_sum)//ANO地面站和校验
 {
   u8 sum = 0,i=0;
@@ -549,14 +561,14 @@ static void ANO_DT_Send_Check(u8 head, u8 check_sum)//ANO地面站和校验
   USART1_Send(data_to_send, 7);
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_DT_Data_Receive_Anl
 @入口参数：无
 @出口参数：无
 功能描述：匿名地面站帧数据解析函数
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_DT_Data_Receive_Anl(u8 *data_buf,u8 num)//ANO数据解析
 {
   u8 sum = 0,i=0;
@@ -638,7 +650,7 @@ void ANO_DT_Data_Receive_Anl(u8 *data_buf,u8 num)//ANO数据解析
     Total_Controller.Latitude_Speed_Control.Kp= 0.001*( (vs16)(*(data_buf+16)<<8)|*(data_buf+17) );
     Total_Controller.Latitude_Speed_Control.Ki= 0.001*( (vs16)(*(data_buf+18)<<8)|*(data_buf+19) );
     Total_Controller.Latitude_Speed_Control.Kd= 0.01*( (vs16)(*(data_buf+20)<<8)|*(data_buf+21) );
-    /***********************位置控制：位置、速度参数共用一组PID参数**********************************************************/
+    ***********************位置控制：位置、速度参数共用一组PID参数**********************************************************
     Total_Controller.Longitude_Speed_Control.Kp=Total_Controller.Latitude_Speed_Control.Kp;
     Total_Controller.Longitude_Speed_Control.Ki=Total_Controller.Latitude_Speed_Control.Ki;
     Total_Controller.Longitude_Speed_Control.Kd=Total_Controller.Latitude_Speed_Control.Kd;
@@ -652,7 +664,7 @@ void ANO_DT_Data_Receive_Anl(u8 *data_buf,u8 num)//ANO数据解析
     Total_Controller.High_Acce_Control.Kp            = 0.001*( (vs16)(*(data_buf+10)<<8)|*(data_buf+11) );
     Total_Controller.High_Acce_Control.Ki            = 0.001*( (vs16)(*(data_buf+12)<<8)|*(data_buf+13) );
     Total_Controller.High_Acce_Control.Kd            = 0.01*( (vs16)(*(data_buf+14)<<8)|*(data_buf+15) );
-    /***********************位置控制：位置、速度参数共用一组PID参数**********************************************************/
+    ***********************位置控制：位置、速度参数共用一组PID参数**********************************************************
     Total_Controller.Longitude_Position_Control.Kp=Total_Controller.Latitude_Position_Control.Kp;
     Total_Controller.Longitude_Position_Control.Ki=Total_Controller.Latitude_Position_Control.Ki;
     Total_Controller.Longitude_Position_Control.Kd=Total_Controller.Latitude_Position_Control.Kd;
@@ -686,14 +698,14 @@ void ANO_DT_Data_Receive_Anl(u8 *data_buf,u8 num)//ANO数据解析
   }
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_Data_Send_Status
 @入口参数：无
 @出口参数：无
 功能描述：匿名地面站发送姿态数据
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_Data_Send_Status(void)//发送基本信息（姿态、锁定状态）
 {
   u8 _cnt=0;
@@ -733,7 +745,7 @@ void ANO_Data_Send_Status(void)//发送基本信息（姿态、锁定状态）
   USART1_Send(data_to_send, _cnt);
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_DT_Send_Senser
 @入口参数：s16 a_x,s16 a_y,s16 a_z,s16 g_x,s16 g_y,s16 g_z,
 s16 m_x,s16 m_y,s16 m_z6
@@ -741,7 +753,7 @@ s16 m_x,s16 m_y,s16 m_z6
 功能描述：匿名地面站发送传感器原始数据
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_DT_Send_Senser(s16 a_x,s16 a_y,s16 a_z,s16 g_x,s16 g_y,s16 g_z,s16 m_x,s16 m_y,s16 m_z)//发送传感器原始数字量
 {
   u8 _cnt=0;
@@ -792,7 +804,7 @@ void ANO_DT_Send_Senser(s16 a_x,s16 a_y,s16 a_z,s16 g_x,s16 g_y,s16 g_z,s16 m_x,
   USART1_Send(data_to_send, _cnt);
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_DT_Send_RCData
 @入口参数：u16 thr,u16 yaw,u16 rol,u16 pit,u16 aux1,u16 aux2,
 u16 aux3,u16 aux4,u16 aux5,u16 aux6
@@ -800,7 +812,7 @@ u16 aux3,u16 aux4,u16 aux5,u16 aux6
 功能描述：匿名地面站发送遥控器各个通道数据
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_DT_Send_RCData(u16 thr,u16 yaw,u16 rol,u16 pit,u16 aux1,u16 aux2,u16 aux3,u16 aux4,u16 aux5,u16 aux6)//发送遥控器通道数据
 {
   u8 _cnt=0;
@@ -841,14 +853,14 @@ void ANO_DT_Send_RCData(u16 thr,u16 yaw,u16 rol,u16 pit,u16 aux1,u16 aux2,u16 au
   USART1_Send(data_to_send, _cnt);
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_DT_Send_GPSData
 @入口参数：无
 @出口参数：无
 功能描述：匿名地面站发送GPS经纬度数据
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_DT_Send_GPSData(u8 Fixstate,
                          u8 GPS_Num,
                          u32 log,
@@ -888,14 +900,14 @@ void ANO_DT_Send_GPSData(u8 Fixstate,
   USART1_Send(data_to_send, _cnt);
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_SEND_StateMachine
 @入口参数：无
 @出口参数：无
 功能描述：匿名地面站发送PID数据状态机
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_DT_Send_PID(u8 group,float p1_p,float p1_i,float p1_d,float p2_p,float p2_i,float p2_d,float p3_p,float p3_i,float p3_d)//发送PID数据
 {
   u8 _cnt=0;
@@ -946,7 +958,7 @@ void ANO_DT_Send_PID(u8 group,float p1_p,float p1_i,float p1_d,float p2_p,float 
   USART1_Send(data_to_send, _cnt);
 }
 
-/***********************************************************
+***********************************************************
 @函数名：ANO_SEND_StateMachine
 @入口参数：无
 @出口参数：无
@@ -955,7 +967,7 @@ void ANO_DT_Send_PID(u8 group,float p1_p,float p1_i,float p1_d,float p2_p,float 
 议来发送
 @作者：无名小哥
 @日期：2019年01月27日
-*************************************************************/
+*************************************************************
 void ANO_SEND_StateMachine(void)//各组数据循环发送
 {
 	static int16_t ANO_Cnt=0;
@@ -1064,7 +1076,7 @@ void ANO_SEND_StateMachine(void)//各组数据循环发送
     ANO_Cnt=0;
   }
 }
-
+*/
 /***********************************************************
 @函数名：Vcan_Send
 @入口参数：无
@@ -1086,7 +1098,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=Yaw_Observation;
   DataBuf[6]=0;
   DataBuf[7]=0;
-*/
+
   DataBuf[0]=NamelessQuad.Position[_YAW];//惯导高度
   DataBuf[1]=NamelessQuad.Speed[_YAW];//惯导速度
   DataBuf[2]=observation_div;//NamelessQuad.Acceleration[_YAW];;//惯导加速度
@@ -1096,7 +1108,7 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[6]=WP_Sensor.baro_altitude_div;
 	DataBuf[7]=NamelessQuad.Acceleration[_YAW];
 	
-/*
+
 //	DataBuf[0]=Accel_X_Butter_Filter.output[Accel_X_Butter_Filter.N-1];;
 //  DataBuf[1]=Accel_Y_Butter_Filter.output[Accel_Y_Butter_Filter.N-1];;
 //  DataBuf[2]=Accel_Z_Butter_Filter.output[Accel_Z_Butter_Filter.N-1];;
@@ -1165,7 +1177,17 @@ void Vcan_Send(void)//山外地面站发送
   DataBuf[5]=sqrt(NamelessQuad.Speed[_PITCH]*NamelessQuad.Speed[_PITCH]+NamelessQuad.Speed[_ROLL]*NamelessQuad.Speed[_ROLL]);
   DataBuf[6]=0;
   DataBuf[7]=NamelessQuad.Position[_YAW];//惯导高度
-  */
+  
+	DataBuf[0]=SDK_Tof.angle;
+  DataBuf[1]=SDK_Tof.length;
+  DataBuf[2]=SDK_Tof.RollLength;
+  DataBuf[3]=SDK_Tof.time;
+  DataBuf[4]=SDK_Tof.vel;
+  DataBuf[5]=0;
+  DataBuf[6]=0;
+  DataBuf[7]=0;
+	*/
+	
   wust_sendware((unsigned char *)DataBuf,sizeof(DataBuf));
 }
 

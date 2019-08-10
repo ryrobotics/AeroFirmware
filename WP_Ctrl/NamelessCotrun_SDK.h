@@ -105,11 +105,32 @@ void NCQ_SDK_Reset(void);
 uint8_t move_with_speed_target(float x_target,float y_target,float delta,SDK_Status *Status,uint16_t number);
 uint8_t move_with_xy_target(float pos_x_target,float pos_y_target,SDK_Status *Status,uint16_t number);
 uint8_t move_with_z_target(float z_target,float z_vel,float delta,SDK_Status *Status,uint16_t number);
+uint8_t move_with_openmv_speed(float x_target,float y_target,float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number);
+uint8_t move_with_openmv_time(float delta,uint8_t OpenMv_Mode,SDK_Status *Status,uint16_t number);
+uint8_t take_off(float z_target,SDK_Status *Status,uint16_t number);
+
 void NCQ_SDK_Run(void);
 uint8_t NCQ_SDK_Circle(void);
 void SDK_DT_Send_Check(unsigned char mode);
 void SDK_Init(void);
 void SDK_Data_Prase(void);
 void SDK_Data_Receive_Prepare(u8 data);
+
+void SDK_DT_Send_Check_Right(unsigned char mode);
+void SDK_Init_Right(void);
+void SDK_Data_Prase_Right(void);
+void SDK_Data_Receive_Prepare_Right(u8 data);
+
+extern uint8_t take_off_flag;
+
+#define POINT_MODE  0x01	//É«¿é
+#define QR_MODE     0x02	//¶þÎ¬Âë
+#define STICK_MODE  0x03	//¸Ë
+#define TOF_MODE 		0x04	//tof
+//#define RGB_MODE    0x05
+#define WAIT_MODE   0x0F
+
+#define MODE_OFFSET 0xF0
+
 #endif
 

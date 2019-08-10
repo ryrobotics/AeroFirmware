@@ -94,6 +94,8 @@ void Controler_Mode_Select()
   {
     OpticalFlow_SINS_Reset();
     OpticalFlow_Ctrl_Reset();
+		
+//		SDK_Tof_Reset();//上锁重置tof扫描
   }
   
   if(Reserve_Mode_Cnt>=1) Reserve_Mode_Cnt--;
@@ -119,7 +121,7 @@ void Controler_Mode_Select()
   }
   
   
-  if(Reserve_Mode_Fast_Exchange_Flag==1)//目的是快速起飞	
+  if(Reserve_Mode_Fast_Exchange_Flag==1||take_off_flag==1)//目的是快速起飞	
   {
     Total_Controller.High_Acce_Control.Scale_Kp=1.0f;
     Total_Controller.High_Acce_Control.Scale_Ki=1.2f; 
@@ -127,9 +129,17 @@ void Controler_Mode_Select()
     Total_Controller.High_Speed_Control.Scale_Ki=1.2f;
     Total_Controller.High_Position_Control.Scale_Kp=2.0;
     Total_Controller.High_Position_Control.Scale_Ki=1.0f; 
+//		Total_Controller.High_Acce_Control.Scale_Kp=1.0f;
+//    Total_Controller.High_Acce_Control.Scale_Ki=1.0f; 
+//    Total_Controller.High_Speed_Control.Scale_Kp=1.0;
+//    Total_Controller.High_Speed_Control.Scale_Ki=1.0f; 
+//    Total_Controller.High_Position_Control.Scale_Kp=1.0;
+//    Total_Controller.High_Position_Control.Scale_Ki=1.0f; 
+		
     if(Total_Controller.High_Position_Control.Expect<=NamelessQuad.Position[_YAW])//反馈高度大于期望高度，即恢复正常
     {
       Reserve_Mode_Fast_Exchange_Flag=0;   
+			take_off_flag=0;
     }	
   }
   else 
