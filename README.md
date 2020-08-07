@@ -2,7 +2,7 @@
 
 This code is used for TI TM4C flight controller designed by our team. We use ToF sensor(TF-mini) for altitude mode and optical flow for position mode. OpenMV acts as vision sensor for searching fire, which is simulated by LED. The remote control was not used during the whole process of flight.
 
-Here is the demo video: https://www.youtube.com/watch?v=CTNGVZQZacY
+Here is the demo video: https://youtu.be/IJAhbWBmi4o
 
 For more details, please visit my website: [RayWong Robotics](https://ray0117.github.io/)
 ## 软件环境
@@ -13,9 +13,7 @@ For more details, please visit my website: [RayWong Robotics](https://ray0117.gi
 
 ### Ver LAST
 
-代码的实际效果可以参照master分支下的mp4文件。
-
-事实上，这套代码在后期由于各种原因，已经没有精力详细记录每个版本的更新信息，往往是刚写好代码，测试好，就push上来，之后再做别的功能。如果有任何问题请联系我，我会尽力解答。
+代码的实际效果可以参照YouTube上的视频，具体的代码解析可以在我的个人网站找到，如有任何疑问欢迎联系我。
 
 ### Ver 0.4
 
